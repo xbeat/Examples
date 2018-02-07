@@ -1,0 +1,82 @@
+
+.virtualInput-joystick{
+  position: absolute;
+  -ms-touch-action : none ;
+      touch-action : none ;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+}
+
+.virtualInput-joystick__frame{
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events:none;
+  opacity: .5;
+}
+
+.virtualInput-joystick__button{
+  cursor: pointer;
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: rgba( 0, 0, 0, .5 );
+}
+
+.virtualInput-joystick__arrowUp,
+.virtualInput-joystick__arrowRight,
+.virtualInput-joystick__arrowDown,
+.virtualInput-joystick__arrowLeft{
+  fill: #000;
+}
+
+.virtualInput-joystick__circle{
+  fill: none;
+  stroke: #000;
+}
+
+.virtualInput-button{
+  position: absolute;
+  box-sizing: border-box;
+  display: table;
+  -ms-touch-action: none ;
+      touch-action: none ;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+}
+
+.virtualInput-button__inner{
+  text-align: center;
+  cursor: pointer;
+  display: table-cell;
+  vertical-align: middle;
+  background: rgba( 0, 0, 0, .5 );
+  border: 1px solid #333;
+  border-radius: 50%;
+}
+
+.virtualInput-squareButton{
+  position: absolute;
+  box-sizing: border-box;
+  display: table;
+  -ms-touch-action: none ;
+      touch-action: none ;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+}
+
+.virtualInput-squareButton__inner{
+  text-align: center;
+  cursor: pointer;
+  display: table-cell;
+  vertical-align: middle;
+  border: 1px solid #333;
+  border-radius: 3px;
+  background: rgba( 0, 0, 0, .5 );
+}
