@@ -19,3 +19,16 @@
   text-anchor: middle;
   transform: translateY(0.7em);
 }
+
+.red {
+  fill: "#ce4b99" 
+
+}
+
+.green {
+  fill: "#b1c94e"
+}
+
+.blue {
+  fill: "#377bbc" 
+}

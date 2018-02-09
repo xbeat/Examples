@@ -44,11 +44,14 @@
 	-->
 
 	<script type="text/javascript" src="js/gauge.js"> </script>
-	<script> let gaugeHalf = new Gauge( 20, 35, 1500, "half", "-Half", "Beers" ); </script>
+	<script> let gaugeHalf = new Gauge( 20, 35, 1500, "half", "-Half", "Beers", "#ce4b99" ); </script>
 	<button onclick = "gaugeHalf.animate();">GO Half</button>
 
-	<script> let gaugeFull = new Gauge( 20, 65, 1500, "full", "-Full", "Coke" ); </script>
+	<script> let gaugeFull = new Gauge( 20, 65, 1500, "full", "-Full", "Coke", "#b1c94e" ); </script>
 	<button onclick = "gaugeFull.animate();">GO Full</button>
+
+	<script> let gaugeFull2 = new Gauge( 20, 65, 1500, "full", "-Full2", "Wine", "#377bbc" ); </script>
+	<button onclick = "gaugeFull2.animate();">GO Full</button>
 
 </body>
 </html>

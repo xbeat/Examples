@@ -1,11 +1,12 @@
 class Gauge{
-	constructor( start = 30, stop = 100, duration = 1500, type = "full", element, label = "", container = document.body ) {
+	constructor( start = 30, stop = 100, duration = 1500, type = "full", element, label = "", fill, container = document.body ) {
 
 		this.SVG_NS = "http://www.w3.org/2000/svg";
 		this.ease = Easing.easeOutQuint;
 		this.start = start;
 		this.stop = type == "full" ? stop > 100 ? 100 : stop : stop > 50 ? 50 : stop;  
 		this.max = 100;
+		this.fill = fill;
 		this.duration = duration;
 		this.container = container;
 		this.element = element;
@@ -67,7 +68,7 @@ class Gauge{
 				fill: "transparent",
 				"stroke-dasharray": "30 70",
 				"stroke-dashoffset": "50",
-				stroke: "#ce4b99",
+				stroke: this.fill,
 				"stroke-width": 3
 			} )
 		);
