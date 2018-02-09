@@ -1,0 +1,54 @@
+<html>
+<head>
+	<title>Gauges</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="css/gauge.css" />
+</head>
+
+<body>
+	<!--
+	<svg width="100px" height="100px" viewBox="0 0 42 42" class="gauge">
+		<circle class="gauge-hole" cx="21" cy="21" r="15.91549430918954" fill="#fff"></circle>
+		<circle class="gauge-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#d2d3d4" stroke-width="3"></circle>
+
+		<circle class="gauge-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#ce4b99" stroke-width="3" stroke-dasharray="40 60" stroke-dashoffset="25"></circle>
+		<circle class="gauge-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#b1c94e" stroke-width="3" stroke-dasharray="20 80" stroke-dashoffset="85"></circle>
+		<circle class="gauge-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#377bbc" stroke-width="3" stroke-dasharray="30 70" stroke-dashoffset="65"></circle>
+		<g class="gauge-text">
+			<text x="50%" y="50%" class="gauge-number">10</text>
+			<text x="50%" y="50%" class="gauge-label">Beers</text>
+		</g>
+	</svg>
+	
+	<svg width="100px" height="100px" viewBox="0 0 42 42" class="gauge">
+		<circle class="gauge-hole" cx="21" cy="21" r="15.91549430918954" fill="#fff"></circle>
+		<circle class="gauge-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#d2d3d4" stroke-width="3"></circle>
+
+		<circle class="gauge-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#ce4b99" stroke-width="3" stroke-dasharray="40 60" stroke-dashoffset="25"></circle>
+		<g class="gauge-text">
+			<text x="50%" y="50%" class="gauge-number">10</text>
+			<text x="50%" y="50%" class="gauge-label">Beers</text>
+		</g>
+	</svg>
+
+	<svg width="100px" height="100px" viewBox="0 0 42 42" class="gauge">
+		<circle class="gauge-hole" cx="21" cy="21" r="15.91549430918954" fill="#fff"></circle>
+		<circle class="gauge-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke-dasharray="50 50" stroke-dashoffset="50" stroke="#d2d3d4" stroke-width="3"></circle>
+
+		<circle id="gaugeBeers" class="gauge-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#ce4b99" stroke-width="3" stroke-dasharray="30 70" stroke-dashoffset="50"></circle>
+		<g class="gauge-text">
+			<text id="gaugeText" x="50%" y="50%" class="gauge-number">10</text>
+			<text x="50%" y="50%" class="gauge-label">Beers</text>
+		</g>
+	</svg>
+	-->
+
+	<script type="text/javascript" src="js/gauge.js"> </script>
+	<script> let gaugeHalf = new Gauge( 20, 35, 1500, "half", "-Half", "Beers" ); </script>
+	<button onclick = "gaugeHalf.animate();">GO Half</button>
+
+	<script> let gaugeFull = new Gauge( 20, 65, 1500, "full", "-Full", "Coke" ); </script>
+	<button onclick = "gaugeFull.animate();">GO Full</button>
+
+</body>
+</html>

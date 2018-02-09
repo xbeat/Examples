@@ -188,23 +188,25 @@ class cameraView {
 	};
 
 	lerp( min, max, amount ) {
-		return min + amount * (max - min);
+		return min + amount * ( max - min );
 	};
 
 	animate() {
 		let now = Date.now();
-		let t = this.duration > 0 ? (now - this.start) / this.duration : 1;
+		let t = this.duration > 0 ? ( now - this.start ) / this.duration : 1;
 		let progress = this.ease( t );
-		let position = new Object;
-		let rotation = new Object;
 
-		position.x = this.lerp( this.cameraStart.position.x, this.cameraEnd.position.x / 20, progress );
-		position.y = this.lerp( this.cameraStart.position.y, this.cameraEnd.position.y / 20, progress );
-		position.z = this.lerp( this.cameraStart.position.z, this.cameraEnd.position.z / 20, progress );
-		rotation.x = this.lerp( this.cameraStart.rotation.x, this.cameraEnd.rotation.x, progress );
-		rotation.y = this.lerp( this.cameraStart.rotation.y, this.cameraEnd.rotation.y, progress );
-		rotation.z = this.lerp( this.cameraStart.rotation.z, this.cameraEnd.rotation.z, progress );		
-		
+		if ( t <= 1 ) {
+			var position = new Object;
+			var rotation = new Object;
+			position.x = this.lerp( this.cameraStart.position.x, this.cameraEnd.position.x / 20, progress );
+			position.y = this.lerp( this.cameraStart.position.y, this.cameraEnd.position.y / 20, progress );
+			position.z = this.lerp( this.cameraStart.position.z, this.cameraEnd.position.z / 20, progress );
+			rotation.x = this.lerp( this.cameraStart.rotation.x, this.cameraEnd.rotation.x, progress );
+			rotation.y = this.lerp( this.cameraStart.rotation.y, this.cameraEnd.rotation.y, progress );
+			rotation.z = this.lerp( this.cameraStart.rotation.z, this.cameraEnd.rotation.z, progress );		
+		};
+
 		// If complete
 		if ( t >= 1 ) {
 			this.onUpdate( position, rotation );
