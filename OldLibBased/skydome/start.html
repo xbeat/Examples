@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" >
+    <head>
+        <meta charset="utf-8" />
+        <meta name="author" content="Script Tutorials" />
+        <title>Skydome w/ Three.js</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <link href="css/style.css" rel="stylesheet" type="text/css">
+		<style>
+			body {
+				color: #fff;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+				background-color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+			
+			#info {
+				position: absolute;
+				top: 0px; width: 100%;
+				padding: 5px;
+			}
+			
+			h1 {
+				color: #fff;
+				margin: 8px;
+			}
+
+			a {
+				color: #48f;
+				text-decoration: none;
+			}
+
+			a:hover {
+				color: #fff;
+			}
+
+			#container {
+				box-sizing: border-box;
+		        height: 100%;
+		        left: 0;
+		        margin: 0;
+		        position: absolute;
+		        top: 0;
+		        width: 100%;
+				background: #5f6a84;
+				/* FF3.6+ */
+				background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%, #5f6a84), color-stop(100%, #262931));
+				/* Chrome,Safari4+ */
+				background: -webkit-radial-gradient(center, ellipse cover, #5f6a84 0%, #262931 100%);
+				/* IE10+ */
+				/* W3C */
+				filter: progid: DXImageTransform.Microsoft.gradient(startColorstr='@color1', endColorstr='@color2', GradientType=1);
+				/* IE6-9 fallback on horizontal gradient */
+			}
+		</style>        
+    </head>
+    <body>
+        <!-- skybox shaders -->
+        <script type="application/x-glsl" id="sky-vertex">
+        varying vec2 vUV;
+
+        void main() {
+          vUV = uv;
+          vec4 pos = vec4(position, 1.0);
+          gl_Position = projectionMatrix * modelViewMatrix * pos;
+        }
+        </script>
+
+        <script type="application/x-glsl" id="sky-fragment">
+        uniform sampler2D texture;
+        varying vec2 vUV;
+
+        void main() {
+          vec4 sample = texture2D(texture, vUV);
+          gl_FragColor = vec4(sample.xyz, sample.w);
+        }
+        </script>
+        <!-- /skybox shaders -->
+
+        <!-- bubble shaders -->
+        <script type="x-shader/x-vertex" id="bubble-vertex">
+        uniform float mRefractionRatio;
+        uniform float mBias;
+        uniform float mScale;
+        uniform float mPower;
+
+        varying vec3 vReflect;
+        varying vec3 vRefract[3];
+        varying float vReflectionFactor;
+
+        void main() {
+
+            vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+            vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
+
+            vec3 worldNormal = normalize( mat3( modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz ) * normal );
+
+            vec3 I = worldPosition.xyz - cameraPosition;
+
+            vReflect = reflect( I, worldNormal );
+            vRefract[0] = refract( normalize( I ), worldNormal, mRefractionRatio );
+            vRefract[1] = refract( normalize( I ), worldNormal, mRefractionRatio * 0.99 );
+            vRefract[2] = refract( normalize( I ), worldNormal, mRefractionRatio * 0.98 );
+            vReflectionFactor = mBias + mScale * pow( 1.0 + dot( normalize( I ), worldNormal ), mPower );
+
+            gl_Position = projectionMatrix * mvPosition;
+        }
+        </script>
+
+        <script type="x-shader/x-fragment" id="bubble-fragment">
+        uniform samplerCube tCube;
+        varying vec3 vReflect;
+        varying vec3 vRefract[3];
+        varying float vReflectionFactor;
+
+        void main() {
+            vec4 reflectedColor = textureCube( tCube, vec3( -vReflect.x, vReflect.yz ) );
+            vec4 refractedColor = vec4( 1.0 );
+
+            refractedColor.r = textureCube( tCube, vec3( -vRefract[0].x, vRefract[0].yz ) ).r;
+            refractedColor.g = textureCube( tCube, vec3( -vRefract[1].x, vRefract[1].yz ) ).g;
+            refractedColor.b = textureCube( tCube, vec3( -vRefract[2].x, vRefract[2].yz ) ).b;
+
+            gl_FragColor = mix( refractedColor, reflectedColor, clamp( vReflectionFactor, 0.0, 1.0 ) );
+        }
+        </script>
+        <!-- /bubble shaders -->
+
+        
+		<script src="js/three.js"></script>
+		<script src="js/OrbitControls.js"></script>
+		<script src="js/stats.min.js"></script>
+		<script src="js/dat.gui.min.js"></script>
+		
+		<script src="js/ColladaLoader.js"></script>
+		<script src="js/Animation.js"></script>
+		<script src="js/AnimationHandler.js"></script>
+		<script src="js/KeyFrameAnimation.js"></script>
+		
+        <script src="js/script.js"></script>
+
+        <div id="container"></div>
+		<div id="field">
+		 	<object data="https://sport.xbe.at/plus/svg/soccer_field.svg" type="image/svg+xml" width="520" height="345"></object>
+		 	<div id="ball"></div>
+  		</div>      
+  		<div id="info">
+		 <br>camera orbit/zoom/pan with left/middle/right mouse button or
+		 <br>orbit/zoom/pan with 1-finger move/pinch/3-finger move 		
+	    </div>  
+    </body>
+</html>
