@@ -9,17 +9,17 @@
 </style>
 
 
-<script src="https://sport.xbe.at/plus/three.js/build/three.min.js"></script>
-<script src="https://sport.xbe.at/plus/three.js/example/js/controls/OrbitControls.js"></script>
-<script src="https://sport.xbe.at/plus/three.js/examples/js/libs/stats.min.js"></script>
+<script src="js/three.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script src="js/stats.min.js"></script>
 <!-- <script src="https://sport.xbe.at/three.js/examples/js/libs/dat.gui.min.js"></script> -->
 
-<script src="https://sport.xbe.at/plus/three.js/examples/js/loaders/ColladaLoader.js"></script>
-<script src="https://sport.xbe.at/plus/three.js/examples/js/loaders/collada/Animation.js"></script>
-<script src="https://sport.xbe.at/plus/three.js/examples/js/loaders/collada/AnimationHandler.js"></script>
-<script src="https://sport.xbe.at/plus/three.js/examples/js/loaders/collada/KeyFrameAnimation.js"></script>
+<script src="js/ColladaLoader.js"></script>
+<script src="js/Animation.js"></script>
+<script src="js/AnimationHandler.js"></script>
+<script src="js/KeyFrameAnimation.js"></script>
 
-<script src="https://sport.xbe.at/plus/Oimo.js-gh-pages/build/oimo.js"></script>
+<script src="js/oimo.js"></script>
 
 </head>
 <body>
@@ -92,6 +92,9 @@
 
         renderer = new THREE.WebGLRenderer({ canvas:canvas, precision: "mediump", antialias:antialias });
         renderer.setSize( window.innerWidth, window.innerHeight );
+
+        let ctx = this.renderer.context;
+        ctx.getShaderInfoLog = function () { return '' };
 
         content = new THREE.Object3D();
         scene.add(content);
@@ -319,7 +322,7 @@
             config[3] = group2;
             bodys[i] = world.add({type:'sphere', size:[w*0.5], pos:[x,y,z], move:true, config:config, name:'sphere'});
            
-            var texture = THREE.ImageUtils.loadTexture('https://sport.xbe.at/plus/images/targets.png');  // Football.png			        
+            var texture = THREE.ImageUtils.loadTexture('images/targets.png');  // Football.png			        
             //meshs[i] = new THREE.Mesh( buffgeoSphere, matSphere );
 	        var material = new THREE.MeshLambertMaterial({ 
 	            color: 0xffffff, 
