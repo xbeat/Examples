@@ -142,6 +142,7 @@ class Gauge{
 	};
 
 	onComplete(){
+		//console.log("complete");
 
 	};
 
