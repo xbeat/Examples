@@ -73,8 +73,8 @@ class Gauge{
 			} )
 		);
 
-		let SVGInnerText = new Array;
-		SVGInnerText.push( this.svg( "text", {
+		let SVGInnertext = new Array;
+		SVGInnertext.push( this.svg( "text", {
 				id: "gauge-number-" + this.element,
 				x: "50%",
 				y: "50%",
@@ -82,7 +82,7 @@ class Gauge{
 			} )
 		);
 
-		SVGInnerText.push( this.svg( "text", {
+		SVGInnertext.push( this.svg( "text", {
 				id: "gauge-label-" + this.element,
 				x: "50%",
 				y: "50%",
@@ -93,7 +93,7 @@ class Gauge{
 		
 		SVGInner.push( this.svg( "g", {
 				class: "gauge-text"
-			}, SVGInnerText )
+			}, SVGInnertext )
 		);
 
 		let gaugeElement = this.svg( "svg", { 
