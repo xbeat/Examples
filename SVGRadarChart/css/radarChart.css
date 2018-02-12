@@ -1,0 +1,29 @@
+body{
+  background:#000;
+}
+
+.radar-chart{
+  stroke:#fff;
+  fill:none;
+  user-select:none;
+  -webkit-user-select:none;
+  cursor:default;
+}
+
+.radar-chart-values{
+  fill:rgba(255,255,255,0.5);
+}
+
+.radar-chart text{
+  stroke:none;
+  fill:#fff;
+  font-family:"Arial";
+}
+
+.radar-chart-milestone{
+  stroke:rgba(255,255,255,0.2);
+}
+
+.radar-chart-axis{
+  stroke:rgba(255,255,255,0.8);
+}
