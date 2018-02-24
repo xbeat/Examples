@@ -12,16 +12,20 @@ class Scene3D{
 		const w = window.innerWidth;
 		const h = window.innerHeight;
 		this.step = 0;
+		this.followObject = false;
+		this.lastCameraLookAt = new THREE.Vector3(0, 0, 0);
 
 		this.scene = new THREE.Scene();
 		this.renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
 		
 		this.renderer.setSize( w, h );
+		this.renderer.shadowMap.enabled = true;
+
 		document.body.appendChild( this.renderer.domElement );
 
 		this.camera = new THREE.PerspectiveCamera( 40, w / h, 1, 5000 );
-		this.camera.position.set( 20, 20, 20 );
-		this.camera.lookAt( new THREE.Vector3(0, 0, 0) );
+		this.camera.position.set( 200, 200, 200 );
+		this.camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
 
 		window.addEventListener( "resize", function() {
 		    scope.camera.aspect = w / h;
@@ -32,18 +36,18 @@ class Scene3D{
 		let ctx = this.renderer.context;
 		ctx.getShaderInfoLog = function () { return '' };
 		   
-			//controls
+		//controls
 		this.controls = new THREE.OrbitControls( this.camera );
 		this.controls.rotateSpeed = 1.0;
 		this.controls.zoomSpeed = 1.2;
 		this.controls.panSpeed = 0.8;
 
-		const aLight = new THREE.AmbientLight( 0x222222 );
-		this.scene.add( aLight );
+		//const aLight = new THREE.AmbientLight( 0x222222 );
+		//this.scene.add( aLight );
 
-		const dLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
-		this.scene.add( dLight );
-		dLight.position.set( 50, 20, 0 );
+		//const dLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+		//this.scene.add( dLight );
+		//dLight.position.set( 50, 20, 0 );
 
 		//const hLight = new THREE.HemisphereLight( 0xffbf67, 0x15c6ff );
 		//this.scene.add( hLight );
@@ -56,7 +60,7 @@ class Scene3D{
 		const gridXZ = new THREE.GridHelper( 100, 10 );
 		this.scene.add( gridXZ );
 
-		const helper = new THREE.CameraHelper( dLight.shadow.camera );
+		const helper = new THREE.CameraHelper( spotLight.shadow.camera );
 		this.scene.add( helper );
 
 		// Torus Geometry
@@ -80,7 +84,7 @@ class Scene3D{
             color: '#00abb1',
             emissive: '#006063',
             shininess: 10
-        }
+        };
 
         let sphereMaterial = new THREE.MeshPhongMaterial( matProps );
         let sphereMesh = new THREE.Mesh( sphereGeometry, sphereMaterial );
@@ -93,7 +97,7 @@ class Scene3D{
     addFloor() {
         let floorGeometry = new THREE.PlaneGeometry( 100, 100, 20, 20 );
         let floorMaterial = new THREE.MeshPhongMaterial();
-        floorMaterial.map = new THREE.TextureLoader().load( 'img/floor_2-1024x1024.png' )
+        floorMaterial.map = new THREE.TextureLoader().load( 'img/floor_2-1024x1024.jpg' )
 
         floorMaterial.map.wrapS = floorMaterial.map.wrapT = THREE.RepeatWrapping;
         floorMaterial.map.repeat.set( 8, 8 );
@@ -120,28 +124,33 @@ class Scene3D{
         let sphere = this.scene.getObjectByName( 'sphere' );
 		this.renderer.render( this.scene, this.camera );
 
-        this.camera.lookAt( sphere.position );
+		if ( this.followObject ){
+			this.lastCameraLookAt.copy( sphere.position ); 
+			this.camera.lookAt( sphere.position );
+        } else {
+			this.camera.lookAt( this.lastCameraLookAt );        	
+        };
+
         this.step += 0.02;
         sphere.position.x = 0 + ( 10 * ( Math.cos( this.step ) ) );
         sphere.position.y = 0.75 * Math.PI / 2 + ( 6 * Math.abs( Math.sin( this.step ) ) );
-
-		//this.camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
+		
 		requestAnimationFrame( function() { scope.render(); } );
 
 	};
 
 };
 
-let scene3D = new Scene3D();
-
 /**
 * 3D Camera 
 */
 class CameraShot {
 
-	constructor( camera, controls ){
-		this.camera = camera;
-		this.controls = controls;
+	constructor( scene ){
+		this.camera = scene.camera;
+		this.controls = scene.controls;
+		this.followObject = scene.followObject;
+		this.lastCameraLookAt = scene.lastCameraLookAt;
 		this.position = new Object();
 		this.rotation = new Object();
 		//this[mode]();
@@ -150,14 +159,16 @@ class CameraShot {
 	onUpdate() {
 		this.camera.position.set( this.position.x, this.position.y, this.position.z );
 		this.camera.rotation.set( this.rotation.x, this.rotation.y, this.rotation.z );
-		this.camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
+		this.camera.lookAt( this.lastCameraLookAt );
 	};
 
 	onComplete() {
 		console.log( "complete" );
+		this.followObject = true;
 	};
 
 	tween( cameraPresets, duration, ease ) {
+		this.followObject = false;
 		this.ease = ease;
 		this.duration = duration;
 		this.cameraEnd = cameraPresets;
@@ -178,7 +189,7 @@ class CameraShot {
 	direct( cameraPresets ) {
 		this.camera.position.set( cameraPresets.position.x, cameraPresets.position.y, cameraPresets.position.z );
 		this.camera.rotation.set( cameraPresets.rotation.x, cameraPresets.rotation.y, cameraPresets.rotation.z );
-		this.camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
+		this.camera.lookAt( this.lastCameraLookAt );
 	};
 
 	lerp( min, max, amount ) {
@@ -249,7 +260,9 @@ let hellPreset = {
 
 
 let presetButton = document.getElementsByClassName( "preset-button" );
-let cameraShot = new CameraShot( scene3D.camera, scene3D.controls );
+
+let scene3D = new Scene3D();
+let cameraShot = new CameraShot( scene3D );
 
 presetButton[0].addEventListener( "click", function() {
   cameraShot.tween( cameraPresets[0], 1000, Easing.easeOutCubic );
@@ -275,6 +288,9 @@ presetButton[5].addEventListener( "click", function() {
   cameraShot.tween( cameraPresets[4], 1000, Easing.easeOutCubic );
 }, false );
 
+presetButton[6].addEventListener( "click", function() {
+  scene3D.followObject = scene3D.followObject == true ? false : true;
+}, false );
 /*
 * Easing Functions
 * only considering the t value for the range [0, 1] => [0, 1]
