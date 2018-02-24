@@ -1,9 +1,9 @@
 
 'use strict';
 
-////////////////////////
-// 3D Camera
-//
+/**
+* 3D Scene 
+*/
 
 class Scene3D{
 
@@ -11,6 +11,7 @@ class Scene3D{
 		const scope = this;
 		const w = window.innerWidth;
 		const h = window.innerHeight;
+		this.step = 0;
 
 		this.scene = new THREE.Scene();
 		this.renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
@@ -22,11 +23,10 @@ class Scene3D{
 		this.camera.position.set( 20, 20, 20 );
 		this.camera.lookAt( new THREE.Vector3(0, 0, 0) );
 
-		window.addEventListener( "resize", ( function size() {
+		window.addEventListener( "resize", function() {
 		    scope.camera.aspect = w / h;
 		    scope.camera.updateProjectionMatrix();
-		  })()
-		);
+		});
 
 		// remove shaderlog warnings
 		let ctx = this.renderer.context;
@@ -45,8 +45,13 @@ class Scene3D{
 		this.scene.add( dLight );
 		dLight.position.set( 50, 20, 0 );
 
-		const hLight = new THREE.HemisphereLight( 0xffbf67, 0x15c6ff );
-		this.scene.add( hLight );
+		//const hLight = new THREE.HemisphereLight( 0xffbf67, 0x15c6ff );
+		//this.scene.add( hLight );
+
+		const spotLight = new THREE.SpotLight();
+        spotLight.position.set( 0, 80, 30 );
+        spotLight.castShadow = true;
+        this.scene.add( spotLight );
 
 		const gridXZ = new THREE.GridHelper( 100, 10 );
 		this.scene.add( gridXZ );
@@ -55,40 +60,91 @@ class Scene3D{
 		this.scene.add( helper );
 
 		// Torus Geometry
-		const torus = new THREE.Mesh( new THREE.TorusGeometry( 6, 2.5, 40, 40 ), new THREE.MeshNormalMaterial() );
-		torus.position.set( 0, 0, 0 );
-		this.scene.add( torus );
+		//const torus = new THREE.Mesh( new THREE.TorusGeometry( 6, 2.5, 40, 40 ), new THREE.MeshNormalMaterial() );
+		//torus.position.set( 0, 0, 0 );
+		//this.scene.add( torus );
 		
-		this.animate();
+		this.addBouncingSphere();
+		this.addFloor();
+		this.addCube();
+
+		this.render();
 
 	};
 
-	animate() {
+    addBouncingSphere() {
+        let sphereGeometry = new THREE.SphereGeometry( 1.5, 20, 20 );
+        let matProps = {
+
+            specular: '#a9fcff',
+            color: '#00abb1',
+            emissive: '#006063',
+            shininess: 10
+        }
+
+        let sphereMaterial = new THREE.MeshPhongMaterial( matProps );
+        let sphereMesh = new THREE.Mesh( sphereGeometry, sphereMaterial );
+        sphereMesh.castShadow = true;
+        sphereMesh.position.y = 0.75 * Math.PI / 2;
+        sphereMesh.name = 'sphere';
+        this.scene.add( sphereMesh );
+    };
+
+    addFloor() {
+        let floorGeometry = new THREE.PlaneGeometry( 100, 100, 20, 20 );
+        let floorMaterial = new THREE.MeshPhongMaterial();
+        floorMaterial.map = new THREE.TextureLoader().load( 'img/floor_2-1024x1024.png' )
+
+        floorMaterial.map.wrapS = floorMaterial.map.wrapT = THREE.RepeatWrapping;
+        floorMaterial.map.repeat.set( 8, 8 );
+        
+        let floorMesh = new THREE.Mesh( floorGeometry, floorMaterial );
+        floorMesh.receiveShadow = true;
+        floorMesh.rotation.x = -0.5 * Math.PI;
+        this.scene.add( floorMesh );
+    };
+
+    addCube() {
+        let cubeGeometry = new THREE.BoxGeometry( 2.5, 4.5, 20 );
+        let cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xff0000 } );
+        let cubeMesh = new THREE.Mesh( cubeGeometry, cubeMaterial );
+        cubeMesh.castShadow = true;
+        cubeMesh.receiveShadow = true;
+        cubeMesh.position.z = -5;
+        this.scene.add( cubeMesh );
+    };
+
+	render() {
 		const scope = this;
-		requestAnimationFrame( function() { scope.animate(); } );
+
+        let sphere = this.scene.getObjectByName( 'sphere' );
 		this.renderer.render( this.scene, this.camera );
-		this.controls.update();
+
+        this.camera.lookAt( sphere.position );
+        this.step += 0.02;
+        sphere.position.x = 0 + ( 10 * ( Math.cos( this.step ) ) );
+        sphere.position.y = 0.75 * Math.PI / 2 + ( 6 * Math.abs( Math.sin( this.step ) ) );
+
+		//this.camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
+		requestAnimationFrame( function() { scope.render(); } );
+
 	};
 
 };
 
 let scene3D = new Scene3D();
 
-
 /**
 * 3D Camera 
 */
-class cameraShot {
+class CameraShot {
 
-	constructor( camera, mode, cameraPresets, duration ){
-		this.duration = duration;
-		this.cameraEnd = cameraPresets;
-		this.ease = Easing.easeOutCubic;
+	constructor( camera, controls ){
 		this.camera = camera;
-		this.position = new Object;
-		this.rotation = new Object;
-		this[mode]();
-
+		this.controls = controls;
+		this.position = new Object();
+		this.rotation = new Object();
+		//this[mode]();
 	};
 
 	onUpdate() {
@@ -98,30 +154,30 @@ class cameraShot {
 	};
 
 	onComplete() {
-		this.camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
 		console.log( "complete" );
 	};
 
-	tween() {
+	tween( cameraPresets, duration, ease ) {
+		this.ease = ease;
+		this.duration = duration;
+		this.cameraEnd = cameraPresets;
+
 		this.cameraStart = {
 			position: new THREE.Vector3(),
-			rotation: new THREE.Vector3(),
-			fov: 0
+			rotation: new THREE.Vector3()
 		};
 
 		this.cameraStart.position.copy( this.camera.position );
 		this.cameraStart.rotation.copy( this.camera.rotation );
-		this.cameraStart.fov = this.camera.fov;
-		
 		
 		// Animation start time
 		this.start = Date.now();
 		this.animate();
 	};
 
-	direct() {
-		this.camera.position.set( this.cameraEnd.position.x, this.cameraEnd.position.y, this.cameraEnd.position.z );
-		this.camera.rotation.set( this.cameraEnd.rotation.x, this.cameraEnd.rotation.y, this.cameraEnd.rotation.z );
+	direct( cameraPresets ) {
+		this.camera.position.set( cameraPresets.position.x, cameraPresets.position.y, cameraPresets.position.z );
+		this.camera.rotation.set( cameraPresets.rotation.x, cameraPresets.rotation.y, cameraPresets.rotation.z );
 		this.camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
 	};
 
@@ -135,14 +191,12 @@ class cameraShot {
 		let progress = this.ease( t );
 		const scope = this;
 
-		if ( t <= 1 ) {
-			this.position.x = this.lerp( this.cameraStart.position.x, this.cameraEnd.position.x / 20, progress );
-			this.position.y = this.lerp( this.cameraStart.position.y, this.cameraEnd.position.y / 20, progress );
-			this.position.z = this.lerp( this.cameraStart.position.z, this.cameraEnd.position.z / 20, progress );
-			this.rotation.x = this.lerp( this.cameraStart.rotation.x, this.cameraEnd.rotation.x, progress );
-			this.rotation.y = this.lerp( this.cameraStart.rotation.y, this.cameraEnd.rotation.y, progress );
-			this.rotation.z = this.lerp( this.cameraStart.rotation.z, this.cameraEnd.rotation.z, progress );		
-		};
+		this.position.x = this.lerp( this.cameraStart.position.x, this.cameraEnd.position.x, progress );
+		this.position.y = this.lerp( this.cameraStart.position.y, this.cameraEnd.position.y, progress );
+		this.position.z = this.lerp( this.cameraStart.position.z, this.cameraEnd.position.z, progress );
+		this.rotation.x = this.lerp( this.cameraStart.rotation.x, this.cameraEnd.rotation.x, progress );
+		this.rotation.y = this.lerp( this.cameraStart.rotation.y, this.cameraEnd.rotation.y, progress );
+		this.rotation.z = this.lerp( this.cameraStart.rotation.z, this.cameraEnd.rotation.z, progress );		
 
 		// If complete
 		if ( t >= 1 ) {
@@ -162,23 +216,23 @@ class cameraShot {
 // 3D Camera preset
 let cameraPresets = [
   {
-    position: { x: -2965.8590458155036, y: 2235.5054451015108, z: 3467.8805523319147 },
+    position: { x: -296.8590458155036, y: 223.5054451015108, z: 346.8805523319147 },
     rotation: { x: -0.5725920499272357, y: -0.6232494536532424, z: -0.35987178331501773 }
   },
   {
-    position: { x: 0, y: 1e4, z: 0 },
+    position: { x: 0, y: 100, z: 0 },
     rotation: { x: -Math.PI / 2, y: 0, z: 0 }
   },
   {
-    position: { x: 4952.937923945333, y: -75.39736997065991, z: 1132.5728047255002 },
+    position: { x: 495.937923945333, y: -75.39736997065991, z: 113.5728047255002 },
     rotation: { x: 0.06647368377615936, y: 1.345513565303963, z: -0.06479871684945059 }
   },
   {
-    position: { x: 0, y: 0, z: 5080 },
+    position: { x: 0, y: 0, z: 508 },
     rotation: { x: 0, y: 0, z: 0 }
   },
   {
-    position: { x: 1220, y: 400, z: 2080 },
+    position: { x: 122, y: 40, z: 108 },
     rotation: { x: -0.2725920499272357, y: -0.1232494536532424, z: -0.05987178331501773 }
   }  
 ];
@@ -194,30 +248,32 @@ let hellPreset = {
 };
 
 
-var presetButton = document.getElementById( "camera-presets" ).getElementsByTagName( "li" );
-presetButton[0].addEventListener("click", function() {
-  new cameraShot( scene3D.camera, "tween", cameraPresets[0], 1000 );
-}, false);
+let presetButton = document.getElementsByClassName( "preset-button" );
+let cameraShot = new CameraShot( scene3D.camera, scene3D.controls );
 
-presetButton[1].addEventListener("click", function() {
-  new cameraShot( scene3D.camera, "tween", cameraPresets[1], 1000 );
-}, false);
+presetButton[0].addEventListener( "click", function() {
+  cameraShot.tween( cameraPresets[0], 1000, Easing.easeOutCubic );
+}, false );
 
-presetButton[2].addEventListener("click", function() {
-  new cameraShot( scene3D.camera, "tween", cameraPresets[2], 1000 );
-}, false);
+presetButton[1].addEventListener( "click", function() {
+  cameraShot.tween( cameraPresets[1], 1000, Easing.easeOutCubic );
+}, false );
+ 
+presetButton[2].addEventListener( "click", function() {
+  cameraShot.tween( cameraPresets[2], 1000, Easing.easeOutCubic );
+}, false );
 
-presetButton[3].addEventListener("click", function() {
-  new cameraShot( scene3D.camera, "tween", cameraPresets[3], 1000 );
-}, false);
+presetButton[3].addEventListener( "click", function() {
+  cameraShot.tween( cameraPresets[3], 1000, Easing.easeOutCubic );
+}, false );
 
-presetButton[4].addEventListener("click", function() {
-  new cameraShot( scene3D.camera, "direct", hellPreset, null );
-}, false);
+presetButton[4].addEventListener( "click", function() {
+  cameraShot.direct( hellPreset );
+}, false );
 
-presetButton[5].addEventListener("click", function() {
-  new cameraShot( scene3D.camera, "tween", cameraPresets[4], 1000 );
-}, false);
+presetButton[5].addEventListener( "click", function() {
+  cameraShot.tween( cameraPresets[4], 1000, Easing.easeOutCubic );
+}, false );
 
 /*
 * Easing Functions
