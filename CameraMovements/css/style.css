@@ -1,4 +1,9 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto+Condensed');
+
 html {
+  font-family: "Roboto";
+  font-size: 14px;
+  font-weight: 300;
 	background-color:#000;
 	color:#fff;
 	font-family:sans-serif;

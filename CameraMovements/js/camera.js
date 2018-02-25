@@ -13,7 +13,7 @@ class Scene3D{
 		const h = window.innerHeight;
 		this.step = 0;
 		this.followObject = false;
-		this.lastCameraLookAt = new THREE.Vector3(0, 0, 0);
+		this.CameraLookAt = new THREE.Vector3(0, 0, 0);
 
 		this.scene = new THREE.Scene();
 		this.renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
@@ -71,6 +71,7 @@ class Scene3D{
 		this.addBouncingSphere();
 		this.addFloor();
 		this.addCube();
+		this.addVirtualJoystick();
 
 		this.render();
 
@@ -79,7 +80,6 @@ class Scene3D{
     addBouncingSphere() {
         let sphereGeometry = new THREE.SphereGeometry( 1.5, 20, 20 );
         let matProps = {
-
             specular: '#a9fcff',
             color: '#00abb1',
             emissive: '#006063',
@@ -111,11 +111,73 @@ class Scene3D{
     addCube() {
         let cubeGeometry = new THREE.BoxGeometry( 2.5, 4.5, 20 );
         let cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xff0000 } );
-        let cubeMesh = new THREE.Mesh( cubeGeometry, cubeMaterial );
-        cubeMesh.castShadow = true;
-        cubeMesh.receiveShadow = true;
-        cubeMesh.position.z = -5;
-        this.scene.add( cubeMesh );
+        this.cube = new THREE.Mesh( cubeGeometry, cubeMaterial );
+        this.cube.castShadow = true;
+        this.cube.receiveShadow = true;
+        this.cube.position.z = -5;
+        this.scene.add( this.cube );
+    };
+
+
+    addVirtualJoystick(){
+    	const scope = this;
+		let joystick1 = new Joystick( document.body, 120, { id: 'joystick1' } );
+		let joystick2 = new Joystick( document.body, 120, { id: 'joystick2' } );
+		let button1 = new Button( document.body, 70, { id: "button1", label: "button1" } );
+		let button2 = new Button( document.body, 70, { id: "button2", label: "button2" } );
+		let button3 = new SquareButton( document.body, 70, { id: "button3", label: "button3" } );
+
+		let xSpeed = 0.01;
+		let ySpeed = 0.01;
+		let zoomFactor = 0.01;
+
+		joystick1.addEventListener( 'move', function () {          
+		    let characterFrontAngle = this.getAngle() + THREE.Math.degToRad( -90 );
+		    let cameraFrontAngle = 10;
+		    let direction = THREE.Math.degToRad( 360 ) - cameraFrontAngle + characterFrontAngle;
+
+		    /*
+		    if ( Math.sign( this.position.y ) == 1 )  {
+		        neck.rotation.y += degInRad(1);
+		    } else if ( Math.sign( this.position.y ) == -1 ) {
+		        neck.rotation.y -= degInRad(1);
+		    };
+
+		    if ( Math.sign( this.position.x ) == 1 ) {
+		        neck.rotation.x += degInRad(1);
+		    } else if ( Math.sign( this.position.x ) == -1 ) {
+		        neck.rotation.x -= degInRad(1);
+		    };
+		    */
+
+		    if ( Math.sign( this.position.y ) == 1 || Math.sign( this.position.x ) == 1 )  {
+		        scope.camera.zoom += zoomFactor;
+		        scope.camera.updateProjectionMatrix();
+		    } else if ( Math.sign( this.position.y ) == -1 || Math.sign( this.position.x ) == -1 ) {
+		        scope.camera.zoom -= zoomFactor;
+		        scope.camera.updateProjectionMatrix();
+		    };
+
+		} );
+
+		joystick2.addEventListener( 'move', function () {
+		    let xt = this.position.x ;
+		    let xy = this.position.y * .5;
+		    scope.cube.rotation.x += xSpeed;
+		    scope.cube.rotation.y += ySpeed;
+		} );
+
+		button1.addEventListener( "press", function() {
+		    console.log("button1");
+		});
+
+		button2.addEventListener( "press", function() {
+		    console.log("button2");
+		});
+
+		button3.addEventListener( "press", function() {
+		    console.log("button3");
+		});
     };
 
 	render() {
@@ -124,11 +186,13 @@ class Scene3D{
         let sphere = this.scene.getObjectByName( 'sphere' );
 		this.renderer.render( this.scene, this.camera );
 
+		this.camera.getWorldDirection( this.CameraLookAt );
+		
 		if ( this.followObject ){
-			this.lastCameraLookAt.copy( sphere.position ); 
 			this.camera.lookAt( sphere.position );
         } else {
-			this.camera.lookAt( this.lastCameraLookAt );        	
+			//this.camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
+			this.camera.lookAt( this.CameraLookAt );
         };
 
         this.step += 0.02;
@@ -150,7 +214,7 @@ class CameraShot {
 		this.camera = scene.camera;
 		this.controls = scene.controls;
 		this.followObject = scene.followObject;
-		this.lastCameraLookAt = scene.lastCameraLookAt;
+		this.CameraLookAt = scene.CameraLookAt;
 		this.position = new Object();
 		this.rotation = new Object();
 		//this[mode]();
@@ -159,7 +223,6 @@ class CameraShot {
 	onUpdate() {
 		this.camera.position.set( this.position.x, this.position.y, this.position.z );
 		this.camera.rotation.set( this.rotation.x, this.rotation.y, this.rotation.z );
-		this.camera.lookAt( this.lastCameraLookAt );
 	};
 
 	onComplete() {
@@ -189,7 +252,6 @@ class CameraShot {
 	direct( cameraPresets ) {
 		this.camera.position.set( cameraPresets.position.x, cameraPresets.position.y, cameraPresets.position.z );
 		this.camera.rotation.set( cameraPresets.rotation.x, cameraPresets.rotation.y, cameraPresets.rotation.z );
-		this.camera.lookAt( this.lastCameraLookAt );
 	};
 
 	lerp( min, max, amount ) {
