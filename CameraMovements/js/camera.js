@@ -119,8 +119,8 @@ class Scene3D{
     };
 
     addVirtualJoystick(){
-		this.joystick1 = new Joystick( document.body, 120, { id: 'joystick1' } );
-		this.joystick2 = new Joystick( document.body, 120, { id: 'joystick2' } );
+		this.joystick1 = new Joystick( document.body, 121, { id: 'joystick1' } );
+		this.joystick2 = new Joystick( document.body, 121, { id: 'joystick2' } );
 		this.button1 = new Button( document.body, 70, { id: "button1", label: "button1" } );
 		this.button2 = new Button( document.body, 70, { id: "button2", label: "button2" } );
 		this.button3 = new SquareButton( document.body, 70, { id: "button3", label: "button3" } );
@@ -347,7 +347,7 @@ presetButton[5].addEventListener( "click", function() {
 }, false );
 
 presetButton[6].addEventListener( "click", function() {
-  scene3D.followObject = scene3D.followObject == true ? false : true;
+  cameraShot.followObject = cameraShot.followObject == true ? false : true;
 }, false );
 /*
 * Easing Functions
