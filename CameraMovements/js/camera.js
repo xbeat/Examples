@@ -118,21 +118,37 @@ class Scene3D{
         this.scene.add( this.cube );
     };
 
-
     addVirtualJoystick(){
-    	const scope = this;
-		let joystick1 = new Joystick( document.body, 120, { id: 'joystick1' } );
-		let joystick2 = new Joystick( document.body, 120, { id: 'joystick2' } );
-		let button1 = new Button( document.body, 70, { id: "button1", label: "button1" } );
-		let button2 = new Button( document.body, 70, { id: "button2", label: "button2" } );
-		let button3 = new SquareButton( document.body, 70, { id: "button3", label: "button3" } );
+		this.joystick1 = new Joystick( document.body, 120, { id: 'joystick1' } );
+		this.joystick2 = new Joystick( document.body, 120, { id: 'joystick2' } );
+		this.button1 = new Button( document.body, 70, { id: "button1", label: "button1" } );
+		this.button2 = new Button( document.body, 70, { id: "button2", label: "button2" } );
+		this.button3 = new SquareButton( document.body, 70, { id: "button3", label: "button3" } );
 
-		let xSpeed = 0.01;
-		let ySpeed = 0.01;
-		let zoomFactor = 0.01;
+		this.xSpeed = 0.01;
+		this.ySpeed = 0.01;
+		this.zoomFactor = 0.01;
 
-		joystick1.addEventListener( 'move', function () {          
-		    let characterFrontAngle = this.getAngle() + THREE.Math.degToRad( -90 );
+		this.button1.addEventListener( "press", function() {
+		    console.log("button1");
+		});
+
+		this.button2.addEventListener( "press", function() {
+		    console.log("button2");
+		});
+
+		this.button3.addEventListener( "press", function() {
+		    console.log("button3");
+		});
+    };
+
+	render() {
+
+		const scope = this;
+
+		if ( this.joystick1.isActive == true ){
+
+		    let characterFrontAngle = this.joystick1.getAngle() + THREE.Math.degToRad( -90 );
 		    let cameraFrontAngle = 10;
 		    let direction = THREE.Math.degToRad( 360 ) - cameraFrontAngle + characterFrontAngle;
 
@@ -150,38 +166,22 @@ class Scene3D{
 		    };
 		    */
 
-		    if ( Math.sign( this.position.y ) == 1 || Math.sign( this.position.x ) == 1 )  {
-		        scope.camera.zoom += zoomFactor;
-		        scope.camera.updateProjectionMatrix();
-		    } else if ( Math.sign( this.position.y ) == -1 || Math.sign( this.position.x ) == -1 ) {
-		        scope.camera.zoom -= zoomFactor;
-		        scope.camera.updateProjectionMatrix();
+		    if ( Math.sign( this.joystick1.position.y ) == 1 || Math.sign( this.joystick1.position.x ) == 1 )  {
+		        this.camera.zoom += this.zoomFactor;
+		        this.camera.updateProjectionMatrix();
+		    } else if ( Math.sign( this.joystick1.position.y ) == -1 || Math.sign( this.joystick1.position.x ) == -1 ) {
+		        this.camera.zoom -= this.zoomFactor;
+		        this.camera.updateProjectionMatrix();
 		    };
 
-		} );
+		};
 
-		joystick2.addEventListener( 'move', function () {
-		    let xt = this.position.x ;
-		    let xy = this.position.y * .5;
-		    scope.cube.rotation.x += xSpeed;
-		    scope.cube.rotation.y += ySpeed;
-		} );
-
-		button1.addEventListener( "press", function() {
-		    console.log("button1");
-		});
-
-		button2.addEventListener( "press", function() {
-		    console.log("button2");
-		});
-
-		button3.addEventListener( "press", function() {
-		    console.log("button3");
-		});
-    };
-
-	render() {
-		const scope = this;
+		if ( this.joystick2.isActive == true ){
+			let xt = this.joystick2.position.x ;
+			let xy = this.joystick2.position.y * .5;
+			this.cube.rotation.x += this.xSpeed;
+			this.cube.rotation.y += this.ySpeed;
+		};
 
         let sphere = this.scene.getObjectByName( 'sphere' );
 		this.renderer.render( this.scene, this.camera );
@@ -208,13 +208,10 @@ class Scene3D{
 /**
 * 3D Camera 
 */
-class CameraShot {
+class CameraShot extends Scene3D {
 
-	constructor( scene ){
-		this.camera = scene.camera;
-		this.controls = scene.controls;
-		this.followObject = scene.followObject;
-		this.CameraLookAt = scene.CameraLookAt;
+	constructor(){
+		super();
 		this.position = new Object();
 		this.rotation = new Object();
 		//this[mode]();
@@ -323,8 +320,7 @@ let hellPreset = {
 
 let presetButton = document.getElementsByClassName( "preset-button" );
 
-let scene3D = new Scene3D();
-let cameraShot = new CameraShot( scene3D );
+let cameraShot = new CameraShot();
 
 presetButton[0].addEventListener( "click", function() {
   cameraShot.tween( cameraPresets[0], 1000, Easing.easeOutCubic );

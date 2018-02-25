@@ -333,10 +333,15 @@ class Button extends EventDispatcher {
 		button.style.height = size + "px";
 
 		let start = ["pointerdown", "MSPointerDown", "touchstart", "click"];
+		let move = ["pointermove", "MSPointerMove", "touchmove", "mousemove"];
 		var fn = function() {
 			scope.dispatchEvent( { type: "press" } );
 		};
 		this.addListenerMulti( button, start, fn, undefined );
+		this.addListenerMulti( button, move, function( event ){
+			event.preventDefault();
+			event.stopPropagation();
+		}, undefined );
 
 	};
 
@@ -366,12 +371,17 @@ class SquareButton extends EventDispatcher{
 		var button = document.getElementById( id );
 		button.style.width = size + "px";
 		button.style.height = size + "px";
-
+		
 		let start = ["pointerdown", "MSPointerDown", "touchstart", "click"];
+		let move = ["pointermove", "MSPointerMove", "touchmove", "mousemove"];
 		var fn = function() {
 			scope.dispatchEvent( { type: "press" } );
 		};
 		this.addListenerMulti( button, start, fn, undefined );
+		this.addListenerMulti( button, move, function( event ){
+			event.preventDefault();
+			event.stopPropagation();
+		}, undefined );
 
 	};
 
