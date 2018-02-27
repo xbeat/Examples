@@ -107,19 +107,26 @@ class Joystick extends EventDispatcher {
 		this.pointerId = null;
 		this.isActive = false;
 
-		this.halfWidth = size / 2;
+		this.width = size * 2;
+		this.halfWidth = size;
 		this.scope = this;
 
 		var id = params && params.id ? params.id : "";
 		var template = [
 			'<div class="virtualInput-joystick" id="' + id + '">',
 			'<div class="virtualInput-joystick__button"></div>',
-			'<svg class="virtualInput-joystick__frame" width=' + size + ' height=' + size + ' viewbox="0 0 ' + size + ' ' + size + '">',
-			'<polygon class="virtualInput-joystick__arrowUp"    points="60.5 11.75 68 19.25 53 19.25 60.5 11.75"/>',
-			'<polygon class="virtualInput-joystick__arrowRight" points="109.25 60.5 101.75 68 101.75 53 109.25 60.5"/>',
-			'<polygon class="virtualInput-joystick__arrowDown"  points="60.5 109.25 68 101.75 53 101.75 60.5 109.25"/>',
-			'<polygon class="virtualInput-joystick__arrowLeft"  points="11.75 60.5 19.25 68 19.25 53 11.75 60.5"/>',
-			'<circle class="virtualInput-joystick__circle" cx="60.5" cy="60.5" r="59" stroke-width="3" />',
+			'<svg class="virtualInput-joystick__frame" width="' +
+			this.width +
+			'" height="' +
+			this.width +
+			'" viewbox="0 0 64 64">',
+			'<polygon class="virtualInput-joystick__arrowUp"    points="32 19 34 21 30 21"></polygon>',
+			'<polygon class="virtualInput-joystick__arrowRight" points="45 32 43 34 43 30"></polygon>',
+			'<polygon class="virtualInput-joystick__arrowDown"  points="32 45 34 43 30 43"></polygon>',
+			'<polygon class="virtualInput-joystick__arrowLeft"  points="19 32 21 34 21 30"></polygon>',
+			'<circle  class="virtualInput-joystick__circle" cx="32" cy="32" r="16" stroke-width="' +
+			this.halfWidth / 64 +
+			'"></circle>',
 			"</svg>",
 			"</div>"
 		].join("");
@@ -131,10 +138,8 @@ class Joystick extends EventDispatcher {
 		this.end = ["pointerup", "MSPointerUp", "touchend", "mouseup"];
 
 		this.all = document.getElementById( id );
-		this.all.style.width = size + "px";
-		this.all.style.height = size + "px";
-
-		this.addListenerMulti( this.all, this.start, this.onbuttondown, this );
+		this.all.style.width = this.width + "px";
+		this.all.style.height = this.width + "px";
 
 		window.addEventListener( "resize", function() {
 				this.offset.left = this.all.offsetLeft;
@@ -142,8 +147,10 @@ class Joystick extends EventDispatcher {
 		}.bind( this ) );
 
 		this.button = this.all.querySelector( ".virtualInput-joystick__button" );
-		this.button.style.width = "70px";
-		this.button.style.height = "70px";
+		this.button.style.width = size * 0.6 + "px";
+		this.button.style.height = size * 0.6 + "px";
+
+		this.addListenerMulti( this.button, this.start, this.onbuttondown, this );
 
 		this.offset = {};
 		this.offset.left = this.all.offsetLeft;
@@ -199,7 +206,7 @@ class Joystick extends EventDispatcher {
 		var wasEventHappend;
 
 		if ( event.changedTouches ) {
-			for ( let i = 0, l = event.changedTouches.length; i < l; i++ ) {
+			for ( ( i = 0 ), ( l = event.changedTouches.length ); i < l; i++ ) {
 				if ( this.pointerId === event.changedTouches[i].identifier ) {
 					wasEventHappend = true;
 					break;
@@ -287,12 +294,12 @@ class Joystick extends EventDispatcher {
 		var angle = this.setAngle( x, y );
 
 		if ( 1 >= length ) {
-			this.setCSSPosition( x / 2, y / 2 );
+			this.setCSSPosition( x, y );
 			return;
 		}
 
 		var pointOnRadius = this.getPointOnRadius();
-		this.setCSSPosition( pointOnRadius.x/2, pointOnRadius.y / 2 );
+		this.setCSSPosition( pointOnRadius.x, pointOnRadius.y );
 	};
 
 	setCSSPosition( x, y ) {
