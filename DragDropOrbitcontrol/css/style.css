@@ -6,10 +6,18 @@ body, html{
 	overflow: hidden;
 }
 
-#content {
+#menu {
 	font-family: helvetica;
 	position: absolute;
 	left:20px;
-	top:10px;	
-	color: #ffffff
+	top: 10px;
+	color: #ffffff;
+	z-index: 2;
+}
+
+#content {
+	position: absolute;
+	left:0px;
+	top:0px;
+	z-index: 1;
 }
