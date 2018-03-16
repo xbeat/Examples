@@ -37,7 +37,7 @@ class VirtualJoystick{
 			if ( this.static == false ){
 				this.container.style.display = "";
 				this.container.style.left = ( event.clientX - this.container.offsetWidth / 2 ) + "px";
-				this.container.style.top =  ( event.clientY - this.container.offsetHeight / 2 ) + "px";
+				this.container.style.top = ( event.clientY - this.container.offsetHeight / 2 ) + "px";
 				this.handleDown( event );
 			};
 
@@ -47,6 +47,10 @@ class VirtualJoystick{
 
 	handleDown( event ) {
 
+		if ( this.static == true ){
+			scene3D.controls.enabled = false;
+		};
+		
 		event.preventDefault();
 		event.stopPropagation();
 
@@ -97,6 +101,7 @@ class VirtualJoystick{
 
 	handleUp( event ) {
 
+		scene3D.controls.enabled = true;
 		event.preventDefault();
 		event.stopPropagation();
 

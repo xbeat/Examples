@@ -261,19 +261,19 @@ class Scene3D {
 		let heading = joystick[0].getHeading();
 		
 		if( heading.up == true ){
-			this.ball.position.z += 0.1;
-		};
-
-		if( heading.down == true ){
-			this.ball.position.z -= 0.1;
-		};
-
-		if( heading.left == true ){
 			this.ball.position.x += 0.1;
 		};
 
-		if( heading.right == true ){
+		if( heading.down == true ){
 			this.ball.position.x -= 0.1;
+		};
+
+		if( heading.left == true ){
+			this.ball.position.z -= 0.1;
+		};
+
+		if( heading.right == true ){
+			this.ball.position.z += 0.1;
 		};
 
 
