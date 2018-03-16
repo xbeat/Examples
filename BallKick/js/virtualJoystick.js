@@ -5,7 +5,7 @@ class VirtualJoystick{
 
 		this.container = options.container;
 		this.maxTravel = options.maxTravel || 32;
-		this.style = options.style || "joystick-stick";
+		this.style = options.style || "virtualJoystic-stick";
 		this.static = options.static;
 
 		this.idBase = Math.random();
@@ -22,26 +22,26 @@ class VirtualJoystick{
 
 		this.stick.addEventListener( 'mousedown', this.handleDown.bind( this ), true ); 
 		document.addEventListener( 'mousemove', this.handleMove.bind( this ) );
-		document.addEventListener( 'mouseup', this.handleUp.bind( this ) );
+		document.addEventListener( 'mouseup', this.handleUp.bind( this ), true );
 
 		this.stick.addEventListener( 'touchstart', this.handleDown.bind( this ), true );
 		document.addEventListener( 'touchmove', this.handleMove.bind( this ) );
-		document.addEventListener( 'touchend', this.handleUp.bind( this ) );
+		document.addEventListener( 'touchend', this.handleUp.bind( this ), true );
 
 		if ( this.static == false ){
 			this.container.style.display = "none";
 		}
 
-		document.body.addEventListener( "mousedown", function( event ){
+		//document.body.addEventListener( "mousedown", function( event ){
 
-			if ( this.static == false ){
-				this.container.style.display = "";
-				this.container.style.left = ( event.clientX - this.container.offsetWidth / 2 ) + "px";
-				this.container.style.top = ( event.clientY - this.container.offsetHeight / 2 ) + "px";
-				this.handleDown( event );
-			};
+		//	if ( this.static == false ){
+		//		this.container.style.display = "";
+		//		this.container.style.left = ( event.clientX - this.container.offsetWidth / 2 ) + "px";
+		//		this.container.style.top = ( event.clientY - this.container.offsetHeight / 2 ) + "px";
+		//		this.handleDown( event );
+		//	};
 
-		}.bind( this ), false );
+		//}.bind( this ), false );
 
 	};
 
@@ -103,7 +103,6 @@ class VirtualJoystick{
 
 		scene3D.controls.enabled = true;
 		event.preventDefault();
-		event.stopPropagation();
 
 		if ( this.pointer === null ) return;
 		
@@ -166,16 +165,104 @@ class VirtualJoystick{
 
 	buildBase( id ){
 		return [
-			'<div class="virtualInput-joystick" id="joystick' + id + '" style="width: 120px; height: 120px;">',
-			'<svg class="virtualInput-joystick-svg" width="120" height="120" viewBox="0 0 120 120">',
-			'<circle class="virtualInput-joystick-circle" cx="60" cy="60" r="56" stroke-width="7"/>',
-			'<polygon class="virtualInput-joystick-arrowUp" points="60 11.25 67.5 18.75 52.5 18.75 60 11.25"/>',
-			'<polygon class="virtualInput-joystick-arrowRight" points="108.75 60 101.25 67.5 101.25 52.5 108.75 60"/>',
-			'<polygon class="virtualInput-joystick-arrowDown" points="60 108.75 67.5 101.25 52.5 101.25 60 108.75"/>',
-			'<polygon class="virtualInput-joystick-arrowLeft" points="11.25 60 18.75 67.5 18.75 52.5 11.25 60"/>',
+			'<div class="virtualJoystick" id="joystick' + id + '" style="width: 120px; height: 120px;">',
+			'<svg class="virtualJoystick-svg" width="120" height="120" viewBox="0 0 120 120">',
+			'<circle class="virtualJoystick-circle" cx="60" cy="60" r="56" stroke-width="7"/>',
+			'<polygon class="virtualJoystick-arrowUp" points="60 11.25 67.5 18.75 52.5 18.75 60 11.25"/>',
+			'<polygon class="virtualJoystick-arrowRight" points="108.75 60 101.25 67.5 101.25 52.5 108.75 60"/>',
+			'<polygon class="virtualJoystick-arrowDown" points="60 108.75 67.5 101.25 52.5 101.25 60 108.75"/>',
+			'<polygon class="virtualJoystick-arrowLeft" points="11.25 60 18.75 67.5 18.75 52.5 11.25 60"/>',
 			'</svg>',
 			'</div>'
 		].join("");		
 	};
+
+};
+
+
+class Drag3D{
+	constructor(){
+
+	};
+
+document.onmousemove = function ( event ) {
+    // make sure we don't access anything else
+    event.preventDefault();
+
+    // get the mouse positions
+    var mouse_x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    var mouse_y = -( event.clientY / window.innerHeight ) * 2 + 1;
+
+    // get the 3D position and create a raycaster
+    var vector = new THREE.Vector3( mouse_x, mouse_y, 0.5 );
+    vector.unproject( camera );
+    
+    var raycaster = new THREE.Raycaster( camera.position,
+            vector.sub( camera.position ).normalize() );
+
+    // first check if we've already selected an object by clicking
+    if ( selectedObject ) {
+        // check the position where the plane is intersected
+        plane.visible = true;
+        var intersects = raycaster.intersectObject( plane );
+        plane.visible = false;
+        // reposition the selectedobject based on the intersection with the plane
+        selectedObject.position.copy( intersects[0].point.sub( offset ) );
+
+    } else {
+        // if we haven't selected an object, we check if we might need
+        // to reposition our plane. We need to do this here, since
+        // we need to have this position before the onmousedown
+        // to calculate the offset.
+        var intersects = raycaster.intersectObjects( objects );
+
+        if ( intersects.length > 0 ) {
+            // now reposition the plane to the selected objects position
+            plane.position.copy( intersects[0].object.position );
+            // and align with the camera.
+            plane.lookAt( camera.position );
+
+        };
+    };
+};
+
+document.onmousedown = function ( event ) {
+
+    // get the mouse positions
+    var mouse_x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    var mouse_y = -( event.clientY / window.innerHeight ) * 2 + 1;
+
+    // use the projector to check for intersections. First thing to do is unproject
+    // the vector.
+    var vector = new THREE.Vector3( mouse_x, mouse_y, 0.5 );
+    // we do this by using the unproject function which converts the 2D mouse
+    // position to a 3D vector.
+    vector.unproject( camera );
+
+    // now we cast a ray using this vector and see what is hit.
+    var raycaster = new THREE.Raycaster( camera.position,
+            vector.sub( camera.position ).normalize() );
+
+    // intersects contains an array of objects that might have been hit
+    var intersects = raycaster.intersectObjects( objects );
+
+    if ( intersects.length > 0 ) {
+        orbit.enabled = false;
+
+        // the first one is the object we'll be moving around
+        selectedObject = intersects[0].object;
+
+        // and calculate the offset
+        plane.visible = true;
+        var intersects = raycaster.intersectObject( plane );
+        plane.visible = false;
+        offset.copy( intersects[0].point ).sub( plane.position );
+    };
+};
+
+document.onmouseup = function ( event ) {
+    orbit.enabled = true;
+    selectedObject = null;
+};
 
 };
