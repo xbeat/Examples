@@ -256,7 +256,7 @@ class Scene3D {
 	        this.updateShot();
 	    };
 
-
+	    /*
 		//MoveBall ?!?
 		let heading = joystick[0].getHeading();
 		
@@ -275,7 +275,7 @@ class Scene3D {
 		if( heading.right == true ){
 			this.ball.position.z += 0.1;
 		};
-
+		*/
 
 	};
 
@@ -437,5 +437,142 @@ class Scene3D {
 
 };
 
-let scene3D = new Scene3D();
+//let scene3D = new Scene3D();
+
+class Drag3D extends Scene3D {
+
+    constructor(){
+
+    	super();
+        this.selectedObject;
+        this.offset = new THREE.Vector3();
+        this.objects = new Array();
+        this.mouse = new Object();
+
+        this.plane = new THREE.Mesh( new THREE.PlaneGeometry( window.innerWidth, window.innerHeight, 18, 18 ), new THREE.MeshBasicMaterial( {
+            color: 0x00ff00,
+            opacity: 0,
+            transparent: true
+        } ));
+
+        this.plane.visible = false;
+        this.scene.add( this.plane );
+
+        for ( let i = 0; i < 10; i++ ) {
+            // create a cube and add to scene
+            let cubeGeometry = new THREE.BoxGeometry( 2, 2, 2 );
+            let cubeMaterial = new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } );
+            cubeMaterial.transparent = true;
+            let cube = new THREE.Mesh( cubeGeometry, cubeMaterial );
+            this.objects.push( cube );
+
+            cube.scale.x = Math.random() + 0.5 * 2;
+            cube.scale.y = Math.random() + 0.5 * 2;
+            cube.scale.z = Math.random() + 0.5 * 2;
+
+            cube.position.x = Math.random() * 50 - 25;
+            cube.position.y = Math.random() * 50 - 25;
+            cube.position.z = Math.random() * 50 - 25;
+
+            cube.rotation.x = Math.random() * Math.PI * 2;
+            cube.rotation.y = Math.random() * Math.PI * 2;
+            cube.rotation.z = Math.random() * Math.PI * 2;
+            this.scene.add( cube );
+        };
+
+		this.objects.push( this.ball );
+        
+        // add the output of the renderer to the html element
+        document.body.appendChild( this.renderer.domElement );
+
+        document.addEventListener( 'mousedown', this.eventDown.bind( this ), true ); 
+        document.addEventListener( 'mousemove', this.eventMove.bind( this ) );
+        document.addEventListener( 'mouseup', this.eventUp.bind( this ), true );        
+
+    };
+
+    eventMove( event ) {
+        // make sure we don't access anything else
+        event.preventDefault();
+
+        // get the mouse positions
+        this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        this.mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
+
+        // get the 3D position and create a raycaster
+        var vector = new THREE.Vector3( this.mouse.x, this.mouse.y, 0.5 );
+        vector.unproject( this.camera );
+        
+        var raycaster = new THREE.Raycaster( this.camera.position,
+                vector.sub( this.camera.position ).normalize() );
+
+        // first check if we've already selected an object by clicking
+        if ( this.selectedObject ) {
+            // check the position where the plane is intersected
+            this.plane.visible = true;
+            var intersects = raycaster.intersectObject( this.plane );
+            this.plane.visible = false;
+            // reposition the selectedobject based on the intersection with the plane
+            this.selectedObject.position.copy( intersects[0].point.sub( this.offset ) );
+
+        } else {
+            // if we haven't selected an object, we check if we might need
+            // to reposition our plane. We need to do this here, since
+            // we need to have this position before the onmousedown
+            // to calculate the offset.
+            var intersects = raycaster.intersectObjects( this.objects );
+
+            if ( intersects.length > 0 ) {
+                // now reposition the plane to the selected objects position
+                this.plane.position.copy( intersects[0].object.position );
+                // and align with the camera.
+                this.plane.lookAt( this.camera.position );
+
+            };
+        };
+    };
+
+    eventDown( event ) {
+
+        // get the mouse positions
+        this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        this.mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
+
+        // use the projector to check for intersections. First thing to do is unproject
+        // the vector.
+        var vector = new THREE.Vector3( this.mouse.x, this.mouse.y, 0.5 );
+        // we do this by using the unproject function which converts the 2D mouse
+        // position to a 3D vector.
+        vector.unproject( this.camera );
+
+        // now we cast a ray using this vector and see what is hit.
+        var raycaster = new THREE.Raycaster( this.camera.position,
+                vector.sub( this.camera.position ).normalize() );
+
+        // intersects contains an array of objects that might have been hit
+        var intersects = raycaster.intersectObjects( this.objects );
+
+        if ( intersects.length > 0 ) {
+            this.controls.enabled = false;
+
+            // the first one is the object we'll be moving around
+            this.selectedObject = intersects[0].object;
+
+            // and calculate the offset
+            this.plane.visible = true;
+            intersects = raycaster.intersectObject( this.plane );
+            this.plane.visible = false;
+            this.offset.copy( intersects[0].point ).sub( this.plane.position );
+        };
+    };
+
+    eventUp( event ) {
+        this.controls.enabled = true;
+        this.selectedObject = null;
+    };
+
+};
+
+let scene3D = new Drag3D();
+
 
