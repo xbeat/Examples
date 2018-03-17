@@ -433,6 +433,24 @@ class Scene3D {
 
 		this.scene.add( this.ring );
 
+		//------------ GOAL ----------------
+    	let postLeft = new THREE.Mesh( new THREE.CylinderGeometry( 0.7, 0.7, 25.6, 32 ),
+							    	new THREE.MeshLambertMaterial( { color: 0xffffff } ) );
+
+    	postLeft.position.set( 37.2, 12.8, 48 );
+    	this.scene.add( postLeft );
+    
+    	let postRight = postLeft.clone();
+    	postRight.position.set( -37.2, 12.8, 48 );
+    	this.scene.add( postRight );
+    
+    	let crossbar = new THREE.Mesh( new THREE.CylinderGeometry( 0.7, 0.7, 75, 32 ),
+							    	new THREE.MeshLambertMaterial( { color: 0xffffff } ) );
+
+    	crossbar.rotation.z = Math.PI / 2;
+    	crossbar.position.set( 0, 25, 48 );
+    	this.scene.add( crossbar );
+
 	};
 
 };

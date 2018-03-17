@@ -196,30 +196,38 @@ function init() {
     s.shadowCameraTop = 5;
     s.shadowCameraBottom = -5;
     scene.add(s);
+    
     var o = new THREE.PlaneGeometry(50, 100, 1, 1);
+    
     var u = new THREE.MeshLambertMaterial({
         map: pitchTexture
     });
+    
     var a = new THREE.Mesh(o, u);
     a.rotation.x = -Math.PI / 2;
     a.recieveShadow = true;
     scene.add(a);
+    
     var f = new THREE.CubeGeometry(.12, 2.56, .12);
     var l = new THREE.Mesh(f, t);
     l.position.set(3.72, 1.28, 48);
     scene.add(l);
+    
     var c = new THREE.Mesh(f, t);
     c.position.set(-3.72, 1.28, 48);
     scene.add(c);
+    
     var h = new THREE.CubeGeometry(7.44, .12, .12);
     var p = new THREE.Mesh(h, t);
     p.position.set(0, 2.5, 48);
     scene.add(p);
+
     var d = THREE.ImageUtils.loadTexture(
     	"textures/mannequins.png",
     	new THREE.UVMapping(),
     	loadingService.pop
 	);
+    
 	loadingService.push();
     var v = new THREE.MeshLambertMaterial({
         map: d,
