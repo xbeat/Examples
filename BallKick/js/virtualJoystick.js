@@ -29,7 +29,7 @@ class VirtualJoystick {
 
 		if ( this.static == false ){
 			this.container.style.display = "none";
-		}
+		};
 
 		//document.body.addEventListener( "mousedown", function( event ){
 

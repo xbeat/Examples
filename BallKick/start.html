@@ -52,6 +52,15 @@
         user-select: none;
       }
 
+      #menu {
+        font-family: helvetica;
+        position: absolute;
+        left:20px;
+        top: 10px;
+        color: #ffffff;
+        z-index: 2;
+      }      
+
     </style>
     <link rel="stylesheet" type="text/css" media="screen,print" href="css/virtualJoystick.css">
     <script src="js/VirtualJoystick.js"></script>
@@ -84,6 +93,14 @@
       );
 */
     </script>
+
+    <div id="menu">
+      <label><input type="radio" name="action" id="eventRotate">Rotate World</label>
+      <label><input type="radio" name="action" id="eventDrag">Drag</label>
+      <label><input type="radio" name="action" id="eventAdd">Add</label>
+      <label><input type="radio" name="action" id="eventDelete">Delete</label>
+    </div>
+
     <div id="display-container"></div>
   	<div id="status-display">
   		<ul>

@@ -182,7 +182,7 @@ class Scene3D {
 		this.camera = new THREE.PerspectiveCamera( 45, aspect, 1, 20000 );
 		this.camera.position.set( 0.0, radius * 1.5, radius * 4.5 );
 
-		// disable orbitControl!! to rotate a camera
+		// disable orbitControl to rotate a camera!!
 		//this.camera.rotation.order = 'YXZ'
 		//this.camera.rotation.y = 1.7;  // Y first
 		//this.camera.rotation.x = 2.5;  // X second
@@ -246,9 +246,9 @@ class Scene3D {
 
 	render() {
 
-		let scope = this;
-	    requestAnimationFrame( function() { scope.render(); } );
-
+		const render = this.render.bind( this ); 
+		requestAnimationFrame( render );
+	
 	    this.controls.update();
 	    this.renderer.render( this.scene, this.camera );
 
@@ -261,19 +261,19 @@ class Scene3D {
 		let heading = joystick[0].getHeading();
 		
 		if( heading.up == true ){
-			this.ball.position.x += 0.1;
+			this.ball3D.position.x += 0.1;
 		};
 
 		if( heading.down == true ){
-			this.ball.position.x -= 0.1;
+			this.ball3D.position.x -= 0.1;
 		};
 
 		if( heading.left == true ){
-			this.ball.position.z -= 0.1;
+			this.ball3D.position.z -= 0.1;
 		};
 
 		if( heading.right == true ){
-			this.ball.position.z += 0.1;
+			this.ball3D.position.z += 0.1;
 		};
 		*/
 
@@ -314,9 +314,9 @@ class Scene3D {
 	        this.statusElementSpin.innerHTML = point.angularVelocity.length().toFixed( 0 ) + ' rpm';
 
 	        //let ball = this.scene.getObjectByName( 'ball' );
-	        this.ball.position.set( point.position.x, point.position.y, point.position.z + this.sceneZOffset );
-	        this.ball.rotation.y =  ( point.angularVelocity.length() / 60 ) * displayTimeElapsed;
-	        this.ball.rotation.z =  ( point.angularVelocity.length() / 600 ) * displayTimeElapsed;
+	        this.ball3D.position.set( point.position.x, point.position.y, point.position.z + this.sceneZOffset );
+	        this.ball3D.rotation.y =  ( point.angularVelocity.length() / 60 ) * displayTimeElapsed;
+	        this.ball3D.rotation.z =  ( point.angularVelocity.length() / 600 ) * displayTimeElapsed;
 
 	        this.ring.position.set( point.position.x, 0, point.position.z + this.sceneZOffset );
 
@@ -414,13 +414,13 @@ class Scene3D {
             map: ballTexture
         });
         
-        this.ball = new THREE.Mesh( buffgeoSphere, ballMaterial );
+        this.ball3D = new THREE.Mesh( buffgeoSphere, ballMaterial );
         
-        this.ball.castShadow = true;
-        this.ball.name = 'ball';
+        this.ball3D.castShadow = true;
+        this.ball3D.name = 'ball';
 
 		//ball[i].receiveShadow = true;
-		this.scene.add( this.ball );
+		this.scene.add( this.ball3D );
 
 		//------------ Ring -------------
 		let ringGeom = new THREE.RingGeometry( 3, 7, 32 );
@@ -439,140 +439,364 @@ class Scene3D {
 
 //let scene3D = new Scene3D();
 
-class Drag3D extends Scene3D {
+'use strict';
 
-    constructor(){
+class DragDrop3D extends Scene3D {
+	
+	constructor(){
 
-    	super();
-        this.selectedObject;
-        this.offset = new THREE.Vector3();
-        this.objects = new Array();
-        this.mouse = new Object();
+		super();
+		/*
+		this.renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
+		this.renderer.setSize( window.innerWidth, window.innerHeight );
 
-        this.plane = new THREE.Mesh( new THREE.PlaneGeometry( window.innerWidth, window.innerHeight, 18, 18 ), new THREE.MeshBasicMaterial( {
-            color: 0x00ff00,
-            opacity: 0,
-            transparent: true
-        } ));
+		this.scene = new THREE.Scene();
+		this.renderer.setClearColor( 0x333333 );
+		this.camera = new THREE.PerspectiveCamera( 27, window.innerWidth / window.innerHeight, 10, 1000 );
+		this.camera.position.z = 60;
+		this.camera.position.y = 30;
+		this.camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
+		this.camera.add( new THREE.PointLight( 0xffffff, 0.7 ) ); // point light at camera position
+		this.scene.add( this.camera );
+		this.scene.add( new THREE.DirectionalLight( 0xffffff,0.5 ) ); // light shining from above.
+		this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
+		this.controls.enabled = false;
+		this.container = document.getElementById( "content" );
+		*/
 
-        this.plane.visible = false;
-        this.scene.add( this.plane );
+		this.ROTATE = 1;
+		this.DRAG = 2;
+		this.ADD = 3, 
+		this.DELETE = 4, 
+		this.ORBIT = 5;
+		
+		this.eventAction = this.DRAG;
+		this.container.addEventListener( "mousedown", this.doEventStart.bind( this ) );
+		this.container.addEventListener( "touchstart", this.doEventStart.bind( this ) );
 
-        for ( let i = 0; i < 10; i++ ) {
-            // create a cube and add to scene
-            let cubeGeometry = new THREE.BoxGeometry( 2, 2, 2 );
-            let cubeMaterial = new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } );
-            cubeMaterial.transparent = true;
-            let cube = new THREE.Mesh( cubeGeometry, cubeMaterial );
-            this.objects.push( cube );
+		this.endCallback = null;
+		this.cancelCallback = null;
+		this.dragging = false;
+		this.start = { x: 0, y: 0 };
+		this.prev = { x: 0,	y: 0 };
 
-            cube.scale.x = Math.random() + 0.5 * 2;
-            cube.scale.y = Math.random() + 0.5 * 2;
-            cube.scale.z = Math.random() + 0.5 * 2;
+		window.addEventListener( 'resize', function () {
+			this.camera.aspect = window.innerWidth / window.innerHeight;
+			this.camera.updateProjectionMatrix();
+			//controls.handleResize();
+			this.renderer.setSize( window.innerWidth, window.innerHeight );
+		}.bind( this ), false );
 
-            cube.position.x = Math.random() * 50 - 25;
-            cube.position.y = Math.random() * 50 - 25;
-            cube.position.z = Math.random() * 50 - 25;
+		this.raycaster = new THREE.Raycaster();
+		
+		document.getElementById( "eventDrag" ).checked = true;
+		document.getElementById( "eventRotate" ).onchange = this.doChangeEventAction.bind( this );
+		document.getElementById( "eventDrag" ).onchange = this.doChangeEventAction.bind( this );
+		document.getElementById( "eventAdd" ).onchange = this.doChangeEventAction.bind( this );
+		document.getElementById( "eventDelete" ).onchange = this.doChangeEventAction.bind( this );
 
-            cube.rotation.x = Math.random() * Math.PI * 2;
-            cube.rotation.y = Math.random() * Math.PI * 2;
-            cube.rotation.z = Math.random() * Math.PI * 2;
-            this.scene.add( cube );
-        };
+		this.createWorld();
+	
+	};
 
-		this.objects.push( this.ball );
-        
-        // add the output of the renderer to the html element
-        document.body.appendChild( this.renderer.domElement );
+	doChangeEventAction() {
 
-        document.addEventListener( 'mousedown', this.eventDown.bind( this ), true ); 
-        document.addEventListener( 'mousemove', this.eventMove.bind( this ) );
-        document.addEventListener( 'mouseup', this.eventUp.bind( this ), true );        
+		this.controls.enabled = false;
 
-    };
+		if ( document.getElementById( "eventRotate" ).checked ) {
+			this.eventAction = this.ROTATE;
+		
+		} else if ( document.getElementById( "eventDrag" ).checked ) {
+			this.eventAction = this.DRAG;
+		
+		} else if ( document.getElementById( "eventAdd" ).checked ) {
+			this.eventAction = this.ADD;
+		
+		} else {
+			this.eventAction = this.DELETE;
+		};
 
-    eventMove( event ) {
-        // make sure we don't access anything else
-        event.preventDefault();
+	};	
+		
+	createWorld() {
 
-        // get the mouse positions
-        this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-        this.mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
+		// An Object3D that contains all the mesh objects in the scene.
+		// Rotation of the scene is done by rotating the world about its
+		// y-axis.  (I couldn't rotate the camera about the scene since
+		// the Raycaster wouldn't work with a camera that was a child
+		// of a rotated object.)
+		this.world = new THREE.Object3D();
+		this.scene.add( this.world );
 
-        // get the 3D position and create a raycaster
-        var vector = new THREE.Vector3( this.mouse.x, this.mouse.y, 0.5 );
-        vector.unproject( this.camera );
-        
-        var raycaster = new THREE.Raycaster( this.camera.position,
-                vector.sub( this.camera.position ).normalize() );
+		this.ground = new THREE.Mesh(
+			new THREE.BoxGeometry( 40, 1, 40 ),
+			new THREE.MeshLambertMaterial( { color:"green" } )
+		);
 
-        // first check if we've already selected an object by clicking
-        if ( this.selectedObject ) {
-            // check the position where the plane is intersected
-            this.plane.visible = true;
-            var intersects = raycaster.intersectObject( this.plane );
-            this.plane.visible = false;
-            // reposition the selectedobject based on the intersection with the plane
-            this.selectedObject.position.copy( intersects[0].point.sub( this.offset ) );
+		this.ground.position.y = -0.5;  // top of base lies in the plane y = -5;
+		this.world.add( this.ground );
 
-        } else {
-            // if we haven't selected an object, we check if we might need
-            // to reposition our plane. We need to do this here, since
-            // we need to have this position before the onmousedown
-            // to calculate the offset.
-            var intersects = raycaster.intersectObjects( this.objects );
+		// An invisible object that is used as the target for raycasting while
+		// dragging a cylinder.  I use it to find the new location of the
+		// cylinder.  I tried using the ground for this purpose, but to get
+		// the motion right, I needed a target that is at the same height
+		// above the ground as the point where the user clicked the cylinder.
+		this.targetForDragging = new THREE.Mesh(
+			new THREE.BoxGeometry( 100, 0.01, 100 ),
+			new THREE.MeshBasicMaterial()
+		);
 
-            if ( intersects.length > 0 ) {
-                // now reposition the plane to the selected objects position
-                this.plane.position.copy( intersects[0].object.position );
-                // and align with the camera.
-                this.plane.lookAt( this.camera.position );
+		this.targetForDragging.material.visible = false;
 
-            };
-        };
-    };
+		//targetForDragging.material.transparent = true;  // This was used for debugging
+		//targetForDragging.material.opacity = 0.1;
+		//world.add(targetForDragging);
 
-    eventDown( event ) {
+		this.cylinder = new THREE.Mesh(
+			new THREE.CylinderGeometry( 1, 2, 6, 16, 32 ),
+			new THREE.MeshLambertMaterial( { color:"yellow" } )
+		);
+		this.cylinder.position.y = 3;  // places base at y = 3;
 
-        // get the mouse positions
-        this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-        this.mouse.y = -( event.clientY / window.innerHeight ) * 2 + 1;
+		this.addCylinder( 10, 10 );
+		this.addCylinder( 0, 15 );
+		this.addCylinder( -15, -7 );
+		this.addCylinder( -8, 5 );
+		this.addCylinder( 5, -12 );
 
-        // use the projector to check for intersections. First thing to do is unproject
-        // the vector.
-        var vector = new THREE.Vector3( this.mouse.x, this.mouse.y, 0.5 );
-        // we do this by using the unproject function which converts the 2D mouse
-        // position to a 3D vector.
-        vector.unproject( this.camera );
+		this.world.add( this.ball3D );
 
-        // now we cast a ray using this vector and see what is hit.
-        var raycaster = new THREE.Raycaster( this.camera.position,
-                vector.sub( this.camera.position ).normalize() );
+	};
 
-        // intersects contains an array of objects that might have been hit
-        var intersects = raycaster.intersectObjects( this.objects );
+	addCylinder( x, z ) {
 
-        if ( intersects.length > 0 ) {
-            this.controls.enabled = false;
+		let obj = this.cylinder.clone();
+		obj.position.x = x;
+		obj.position.z = z;
+		this.world.add( obj );
 
-            // the first one is the object we'll be moving around
-            this.selectedObject = intersects[0].object;
+	};
 
-            // and calculate the offset
-            this.plane.visible = true;
-            intersects = raycaster.intersectObject( this.plane );
-            this.plane.visible = false;
-            this.offset.copy( intersects[0].point ).sub( this.plane.position );
-        };
-    };
+	objectSelect( x, y ) {
 
-    eventUp( event ) {
-        this.controls.enabled = true;
-        this.selectedObject = null;
-    };
+		if ( this.eventAction == this.ROTATE ) {
+			return true;
+		};
+
+  		// I don't want to check for hits on targetForDragging
+		if ( this.targetForDragging.parent == this.world ) {
+			this.world.remove( this.targetForDragging );
+		};
+
+		let a = 2 * x / window.innerWidth - 1;
+		let b = 1 - 2 * y / window.innerHeight;
+
+		this.raycaster.setFromCamera( new THREE.Vector2( a, b ), this.camera );
+		let intersects = this.raycaster.intersectObjects( this.world.children );
+
+		if ( intersects.length == 0 ) {
+			return false;
+		};
+
+		let item = intersects[ 0 ];
+		let objectHit = item.object;
+
+		switch ( this.eventAction ) {
+
+			case this.DRAG:
+
+				if ( objectHit == this.ground ) {
+					return false;
+				} else {
+					this.dragItem = objectHit;
+					this.world.add( this.targetForDragging );
+					this.targetForDragging.position.set( 0, item.point.y, 0 );
+					return true;
+				};
+
+			case this.ADD:
+
+				if ( objectHit == this.ground ) {
+
+					// Gives the point of intersection in world coords
+					let locationX = item.point.x;
+					let locationZ = item.point.z;
+					let coords = new THREE.Vector3( locationX, 0, locationZ );
+					
+					// to add cylider in correct position, neew local coords for the world object
+					this.world.worldToLocal( coords );
+					this.addCylinder( coords.x, coords.z );
+				};
+				return false;
+			
+			case this.DELETE: // DELETE
+
+				if ( objectHit != this.ground ) {
+					this.world.remove( objectHit );
+				};
+				return false;
+		};
+	};
+
+	objectMove( x, y ) {
+
+		this.controls.enabled = false;
+
+		if ( this.eventAction == this.ROTATE ) {
+
+			let dx = x - this.prev.x;
+			this.world.rotateY( dx / 200 );
+
+		} else {  
+
+			// drag
+			let a = 2 * x / window.innerWidth - 1;
+			let b = 1 - 2 * y / window.innerHeight;
+			this.raycaster.setFromCamera( new THREE.Vector2( a, b ), this.camera );
+			let intersects = this.raycaster.intersectObject( this.targetForDragging ); 
+
+			if ( intersects.length == 0 ) {
+				return;
+			};
+
+			let locationX = intersects[0].point.x;
+			let locationZ = intersects[0].point.z;
+			let coords = new THREE.Vector3( locationX, 0, locationZ );
+			
+			this.world.worldToLocal( coords );
+			
+			// clamp coords to the range -19 to 19, so object stays on ground
+			a = Math.min( 19, Math.max( -19, coords.x ) );
+			b = Math.min( 19, Math.max( -19, coords.z ) );
+			
+			this.dragItem.position.set( a, 3, b );
+		};
+	};
+
+	doEventStart( event ) {
+		
+		if ( event.changedTouches ) {
+
+			if ( event.touches.length != 1 ) {
+				this.doEventEnd( event );
+				return;
+			};
+
+		};
+		
+		event.preventDefault();
+
+		if ( this.dragging ) {
+			return;
+		};
+
+		let r = this.container.getBoundingClientRect();
+
+		if ( event.changedTouches ) {
+
+			var x = event.touches[ 0 ].clientX - r.left;
+			var y = event.touches[ 0 ].clientY - r.top;
+
+		} else {
+	
+			var x = event.clientX - r.left;
+			var y = event.clientY - r.top;
+
+		};
+	
+		this.prev.x = this.start.x = x;
+		this.prev.y= this.start.x = y;
+		this.dragging = this.objectSelect( x, y );
+
+		let scope = this;
+
+		if ( this.dragging ) {
+
+			if ( event.changedTouches ) {
+			
+				this.container.addEventListener( "touchmove", scope.doEventMove.bind( this ) );
+				this.container.addEventListener( "touchend", scope.doEventEnd.bind( this ) );
+			
+			} else {
+			
+				this.container.addEventListener( "mousemove", scope.doEventMove.bind( this ) );
+				this.container.addEventListener( "mouseup", scope.doEventEnd.bind( this ) );
+			
+			};
+		};
+	};
+
+	doEventMove( event ) {
+	
+		if ( this.dragging ) {
+
+			if ( event.changedTouches ) {
+
+				if ( event.touches.length != 1 ) {
+					this.doEventEnd( event );
+					return;
+				};
+
+			};
+
+			event.preventDefault();
+			let r = this.container.getBoundingClientRect();
+
+			if ( event.changedTouches ) {
+				var x = event.touches[ 0 ].clientX - r.left;
+				var y = event.touches[ 0 ].clientY - r.top;
+			
+			} else {
+
+				var x = event.clientX - r.left;
+				var y = event.clientY - r.top;
+			};
+
+			this.objectMove( x, y );
+			this.prev.x = x;
+			this.prev.y = y;
+		};
+	};
+
+	doEventEnd( event ) {
+		
+		this.controls.enabled = true;
+		
+		if ( this.eventAction == this.ROTATE ) {
+			this.eventAction = this.DRAG;
+			document.getElementById( "eventDrag" ).checked = true;
+		};
+
+		let scope = this;
+
+		if ( this.dragging ) {
+
+			this.dragging = false;
+			
+			if ( event.changedTouches ) {
+
+				this.container.removeEventListener( "touchmove", scope.doEventMove.bind( this ) );
+				this.container.removeEventListener( "touchend", scope.doEventEnd.bind( this ) );
+
+			} else {
+
+				this.container.removeEventListener( "mousemove", scope.doEventMove.bind( this ) );
+				this.container.removeEventListener( "mouseup", scope.doEventEnd.bind( this ) );
+
+			};
+		};
+
+		if ( this.endCallback ) {
+			this.endCallback( event );
+		};
+						
+		if ( this.cancelCallback ) {
+			this.cancelCallback( event );
+		
+		};			
+
+	};
 
 };
 
-let scene3D = new Drag3D();
-
-
+let scene3D = new DragDrop3D();
