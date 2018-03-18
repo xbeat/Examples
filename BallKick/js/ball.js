@@ -163,7 +163,7 @@ class Scene3D {
 		this.renderer.setSize( window.innerWidth, window.innerHeight )
 		
 		// add container
-		this.container = document.getElementById( 'display-container' );
+		this.container = document.getElementById( 'container' );
 		this.container.appendChild( this.renderer.domElement );
 
 		// status elements
@@ -817,4 +817,7 @@ class DragDrop3D extends Scene3D {
 
 };
 
-let scene3D = new DragDrop3D();
+document.addEventListener( "DOMContentLoaded", function( event ) {
+	let scene3D = new DragDrop3D();
+});
+
