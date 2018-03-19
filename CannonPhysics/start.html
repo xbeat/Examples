@@ -1,0 +1,42 @@
+<html lang="en" >
+<head>
+	<meta charset="UTF-8">
+	<title>Cannon Physics</title>
+	<link rel="stylesheet" href="css/style.css">
+	<style>
+      .virtualButton{
+        font-family: "Lucida Grande", Tahoma, Verdana, sans-serif;
+        position: absolute;
+        font-weight: 800;
+        right: 120px;
+        bottom: 90px;
+        width: 65px; 
+        height: 65px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        background: rgba( 255, 255, 255, .5 );
+        border-radius: 50%;
+        -ms-touch-action: none;
+        touch-action: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }		
+	</style>
+</head>
+<body>
+    <div class="virtualButton" id="buttonShoot">Shoot</div>    
+    <script>
+      document.getElementById("buttonShoot").addEventListener( "click", function() {
+        physics3D.kickBall();
+      });
+  	</script>
+	<script src="js/three.js"></script>
+	<script src="js/OrbitControls.js"></script>
+	<script src="js/cannon.js"></script>
+	<script src="js/index.js"></script>
+</body>
+</html>
