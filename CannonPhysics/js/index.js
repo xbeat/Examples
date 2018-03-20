@@ -304,6 +304,11 @@ class Physics3D{
 
 	};
 
+	// magnus effect
+	// S(v)w x v
+	// S will be the spin of the ball, which is a function of it's speed, w is the angular velocity, and v is the linear velocity. 
+	//The x in the middle is a cross product. So that's S ( v ) [ ω × v ] 
+
 	bendBall( e ) {
 	    let ballBend = this.ball3DBody.velocity;
     	ballBend = ballBend.cross( this.ball3DBody.angularVelocity );
@@ -349,6 +354,19 @@ class Physics3D{
 			this.paddleBody.position.set( intersects[ 0 ].point.x, 20,  intersects[ 0 ].point.z );
 		};
 
+	};
+
+	// CCD Continous Collision Detection
+	// Must predict next position and check if the ray trajectory if it intersects anything!
+	limitSphere( ball, objs ){
+		var raycaster = new THREE.Raycaster();
+  		raycaster.set( ball.position.clone(), ball.velocity.clone().unit() );
+  		raycaster.far = ball.velocity.length();
+  		var arr = raycaster.intersectObjects( objs );
+
+  		if( arr.length ){
+    		ball.position.copy( arr[0].point );
+  		};
 	};
 
 };

@@ -817,7 +817,8 @@ class DragDrop3D extends Scene3D {
 
 };
 
+let scene3D;
 document.addEventListener( "DOMContentLoaded", function( event ) {
-	let scene3D = new DragDrop3D();
+	scene3D = new DragDrop3D();
 });
 
