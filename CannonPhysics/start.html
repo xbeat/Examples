@@ -57,8 +57,6 @@
 				font-family: "Lucida Grande", Tahoma, Verdana, sans-serif;
 				position: absolute;
 				font-weight: 800;
-				right: 120px;
-				bottom: 90px;
 				width: 65px; 
 				height: 65px;
 				display: flex;
@@ -75,6 +73,16 @@
 				user-select: none;
 			}
 
+			#buttonShoot{
+				right: 200px;
+				bottom: 90px;
+			}
+
+			#buttonReset{
+				right: 120px;
+				bottom: 90px;
+			}
+
 			#menu {
 				font-family: helvetica;
 				position: absolute;
@@ -86,6 +94,7 @@
 
         </style>
     </head>
+
     <body>
         <script src="js/Three.js"></script>
         <script src="js/cannon.js"></script>
@@ -93,11 +102,11 @@
         <script src="js/OrbitControls.js"></script>
         <script src="js/VirtualJoystick.js"></script>
         <script src="js/physicsgoal.js"></script>
+        <script src="js/CannonDebugRenderer.js"></script>
 
         <link rel="stylesheet" type="text/css" media="screen,print" href="css/virtualJoystick.css">
 
 	    <div id="menu">
-	      <label><input type="radio" name="action" id="eventRotate">Rotate World</label>
 	      <label><input type="radio" name="action" id="eventDrag">Drag</label>
 	      <label><input type="radio" name="action" id="eventAdd">Add</label>
 	      <label><input type="radio" name="action" id="eventDelete">Delete</label>
@@ -105,31 +114,37 @@
 
         <div id="container"></div>
    		<div id="joystickStatic"></div>
-	    <div class="virtualButton" id="buttonShoot">Shoot</div>    
+	    <div class="virtualButton" id="buttonShoot">Shoot</div>
+	    <div class="virtualButton" id="buttonReset">Reset</div>    
+	    
 	    <script>
-	      document.getElementById("buttonShoot").addEventListener( "click", function() {
-	        scene3D.beginShot();
-	      });
+			document.getElementById( "buttonShoot" ).addEventListener( "click", function() {
+				scene3D.beginShot();
+			});
 
-		      let joystick = new Array();
-		
-		      joystick.push( new VirtualJoystick( {
-		                container: document.getElementById( 'joystickStatic' ),
-		                maxTravel: 32,
-		                style: "virtualJoystic-stick",
-		                static: true
-		              } )
-		      );
+			document.getElementById( "buttonReset" ).addEventListener( "click", function() {
+				scene3D.resetShot();
+			});
 
-		 /*
-		      joystick.push( new VirtualJoystick( {
-		                container: document.getElementById( 'joystickDynamic' ),
-		                maxTravel: 3200,
-		                style: "virtualJoystic-stick",
-		                static: false   
-		              } )
-		      );
-		*/	      
+			let joystick = new Array();
+
+			joystick.push( new VirtualJoystick( {
+			        container: document.getElementById( "joystickStatic" ),
+			        maxTravel: 32,
+			        style: "virtualJoystic-stick",
+			        static: true
+			      } )
+			);
+
+			/*
+			joystick.push( new VirtualJoystick( {
+			        container: document.getElementById( 'joystickDynamic' ),
+			        maxTravel: 3200,
+			        style: "virtualJoystic-stick",
+			        static: false   
+			      } )
+			);
+			*/	      
 	    </script>
 
 	  	<div id="status-display">
