@@ -74,7 +74,6 @@ class Scene3D {
 		this.light.shadow.camera.top = 1500;
 		this.light.shadow.camera.bottom = -2500;
 		this.scene.add( this.light );
-
   
 		this.balls = new Array();
 		this.ballMeshes = new Array();
@@ -82,10 +81,6 @@ class Scene3D {
         this.boxMeshes = new Array();
         this.boxes = new Array();
 
-        this.ballShape = new CANNON.Sphere( 0.2 );
-        this.ballGeometry = new THREE.SphereGeometry( this.ballShape.radius, 32, 32 );
-        this.shootDirection = new THREE.Vector3();
-	    	
         //---------- Cannon init ----------------
         this.world = new CANNON.World();
         this.world.quatNormalizeSkip = 0;
@@ -105,7 +100,7 @@ class Scene3D {
         this.world.broadphase = new CANNON.NaiveBroadphase();
 
 		//----- CANNON debug -----
-		this.cannonDebugRenderer = new THREE.CannonDebugRenderer( this.scene, this.world );
+		//this.cannonDebugRenderer = new THREE.CannonDebugRenderer( this.scene, this.world );
 
 		// Dat Gui 
 		this.shotControl = {
@@ -117,7 +112,7 @@ class Scene3D {
 
 		let gui = new dat.GUI( { autoPlace: false } );
 		this.container.appendChild( gui.domElement );
-		gui.add( this.shotControl, 'shootVelo', 5, 50 );
+		gui.add( this.shotControl, 'shootVelo', 0, 300 );
 		gui.add( this.shotControl, 'VerticalAngle', 0, Math.PI / 2 );
 		gui.add( this.shotControl, 'HorizontalAngle', 0, Math.PI * 2 );
 		gui.add( this.shotControl, 'shoot' );
@@ -153,12 +148,11 @@ class Scene3D {
 
 		this.createPitch();
 
-
 	};
-
 
 	createPitch(){
 
+		/*
 		let scope = this;
 		new THREE.ObjectLoader().load( "models/pitch/stadium.json", function( pitch ) {
 			
@@ -177,6 +171,7 @@ class Scene3D {
 			scope.scene.add( content ); 
 
 		});
+		*/
 
 		this.addInitialElements();
 		this.createWall();
@@ -260,7 +255,6 @@ class Scene3D {
 	
 	};
 
-
 	updateShot() {
 
 	    let now = Date.now();
@@ -280,29 +274,64 @@ class Scene3D {
 
 	beginShot() {
 
-        let ballBody = new CANNON.Body( { mass: 1 } );
-        ballBody.addShape( this.ballShape );
-        this.shootVelo = this.shotControl.shootVelo;
+        // ----------- ball -------------
 
-        this.material = new THREE.MeshLambertMaterial( { color: 0xff0000 } );
-        let ballMesh = new THREE.Mesh( this.ballGeometry, this.material );
-        this.world.addBody( ballBody );
-        this.scene.add( ballMesh );
-        ballMesh.castShadow = true;
-        ballMesh.receiveShadow = true;
-        this.balls.push( ballBody );
-        this.ballMeshes.push( ballMesh );
         this.getShootDir( this.shootDirection );
-        ballBody.velocity.set( this.shootDirection.x * this.shootVelo,
-                               this.shootDirection.y * this.shootVelo,
-                               this.shootDirection.z * this.shootVelo );
+        
+		// Position
+		this.ballBody.position.setZero();
+		this.ballBody.previousPosition.setZero();
+		this.ballBody.interpolatedPosition.setZero();
+		this.ballBody.initPosition.setZero();
+
+		// orientation
+		this.ballBody.quaternion.set( 0, 0, 0, 1 );
+		this.ballBody.initQuaternion.set( 0, 0, 0, 1 );
+		this.ballBody.interpolatedQuaternion.set( 0, 0, 0, 1 );
+
+		// Velocity
+		this.ballBody.velocity.setZero();
+		this.ballBody.initVelocity.setZero();
+		this.ballBody.angularVelocity.setZero();
+		this.ballBody.initAngularVelocity.setZero();
+
+		// Force
+		this.ballBody.force.setZero();
+		this.ballBody.torque.setZero();
+
+		// Sleep state reset
+		this.ballBody.sleepState = 0;
+		this.ballBody.timeLastSleepy = 0;
+		this.ballBody.wakeUpAfterNarrowphase = false;
+
+
+        var radius = 4, mass = 2, f = 500;
+        var dt = 1 / 60, damping = 0.5;
+       	
+        //this.ballBody.linearDamping = this.ballBody.angularDamping = damping;
+        
+        // Add an force to the center
+        var worldPoint = new CANNON.Vec3( 0, 0, 4 );
+        var force = new CANNON.Vec3( f, f/4, 0 );
+        //this.ballBody.applyImpulse( force, worldPoint );
+        //this.ballBody.angularVelocity.set( 1500, 10, 500 );
+
 
         // Move the ball outside the player sphere
         let x = this.ball3D.position.x;
         let y = this.ball3D.position.y;
         let z = this.ball3D.position.z;
-        ballBody.position.set( x, y, z );
-        ballMesh.position.set( x, y, z );
+        this.ballBody.position.set( x + 30, 1, z + 30 );
+        this.ballMesh.position.set( x + 30, 1, z + 30 );
+
+
+	    var distance = 40;
+	    var projectileSpeed = 100;
+		var firingDirection = new CANNON.Vec3( -1, 0, 1 );
+		var firingDirection = this.ballBody.quaternion.vmult( firingDirection );
+		
+		this.ballBody.velocity.set( firingDirection.x*projectileSpeed, -10, firingDirection.z*projectileSpeed );
+
 
 	};
 
@@ -316,7 +345,7 @@ class Scene3D {
         //targetVec.copy( ray.direction );
         //targetVec.set( ray.direction.x, Math.PI / 4, ray.direction.y )
 
-        targetVec.set( Math.cos ( this.shotControl.HorizontalAngle ), this.shotControl.VerticalAngle, Math.sin( this.shotControl.HorizontalAngle ) );
+        targetVec.set( Math.cos ( this.shotControl.HorizontalAngle ), Math.sin ( this.shotControl.VerticalAngle ), Math.sin( this.shotControl.HorizontalAngle ) );
 
     };
 
@@ -330,7 +359,7 @@ class Scene3D {
 
 	    this.ring.position.copy( this.ball3D.position );
 
-        this.world.step( 1/120 );
+        this.world.step( 1/60 );
 
         // Update mesh positions
         for( let i = 0; i < this.balls.length; i++ ){
@@ -338,12 +367,7 @@ class Scene3D {
             this.ballMeshes[i].quaternion.copy( this.balls[i].quaternion );
         };
 
-		for( let i = 0; i < this.boxes.length; i++ ){
-            this.boxMeshes[i].position.copy( this.boxes[i].position );
-            this.boxMeshes[i].quaternion.copy( this.boxes[i].quaternion );
-        };
-
-	    this.cannonDebugRenderer.update();// Update the debug renderer
+	    //this.cannonDebugRenderer.update();// Update the debug renderer
 
 	};
 
@@ -351,94 +375,18 @@ class Scene3D {
 		this.ball3D.position.set( 0, 1, this.sceneZOffset );
 	};
 
-    getGrid( sizeX, sizeZ, step, color ) {
-
-        let geometry = new THREE.Geometry();
-        let material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors, opacity: 0.2 } );
-
-        for ( let i = - sizeX; i <= sizeX; i += step ) {
-
-            for ( let j = - sizeZ; j <= sizeZ; j += step ) {
-
-                geometry.vertices.push(
-                    new THREE.Vector3( - sizeX, 0.1, j ), new THREE.Vector3( sizeX, 0.1, j ),
-                    new THREE.Vector3( i, 0.1, - sizeZ ), new THREE.Vector3( i, 0.1, sizeZ )
-                );
-
-                geometry.colors.push( color, color, color, color );
-
-            };
-
-        };
-
-        let grid = new THREE.LineSegments( geometry, material );
-
-        return grid;
-    };
-
 	addInitialElements() {
 	    
-	    let scope = this;
 	    let gridWidth = 60;
 	    let gridHeight = 100;
 
-	    this.sceneZOffset = -gridHeight/2.0;
-
-	    // add ground grid
-	    let gridColor = new THREE.Color( 0x69ba6d )
-	    let grid = this.getGrid( gridWidth, gridHeight, 10, gridColor );
-
-	    this.scene.add( grid );
-
-	    // Add text
-	    let loader = new THREE.FontLoader();
-	    loader.load( 'fonts/helvetiker_regular.typeface.json', function ( font ) {
-
-	        // add marker indicators
-	        let markerColor = 0x00ffff;
-	        let textMesh = new THREE.MeshNormalMaterial();
-
-	        let markerMeterage = 0;
-	        while( markerMeterage <= gridHeight + 15 ) {
-
-	            // text
-	            let textGeometry = new THREE.TextGeometry( markerMeterage + "mt", {
-	                size: 3,
-	                height: 0.1,
-	                curveSegments: 1,
-	                font: font
-	            });
-
-	            textGeometry.computeBoundingBox();
-	            textGeometry.computeVertexNormals();
-	            
-	            let words = new THREE.Mesh( textGeometry, textMesh );
-	            words.position.x = gridWidth/2.0 + 5;
-	            words.position.z = markerMeterage + scope.sceneZOffset - 0.5 * ( textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x );
-	            words.rotation.y = -1 * Math.PI / 2;
-	            scope.scene.add( words );
-
-	            // line across grid
-	            let pointA = new THREE.Vector3( -gridWidth/2.0, 0.2, markerMeterage + scope.sceneZOffset );
-	            let pointB = new THREE.Vector3( gridWidth/2.0, 0.2, markerMeterage + scope.sceneZOffset );
-	            let lineGeometry = new THREE.Geometry();
-	            lineGeometry.vertices = [pointA, pointB];
-	            let lineMaterial = new THREE.LineBasicMaterial( { color: markerColor, linewidth: 2 } );
-	            let markerLine = new THREE.Line( lineGeometry, lineMaterial );
-	            scope.scene.add( markerLine );
-
-	            markerMeterage += 15;
-
-	        };
-
-	    });
 			
 		// Cannon Plane		
         // Create a slippery material (friction coefficient = 0.0)
         let physicsMaterial = new CANNON.Material( { name: "slipperyMaterial", friction: 0.4, restitution: 0.3 } );
-        let physicsContactMaterial = new CANNON.ContactMaterial( physicsMaterial, physicsMaterial, { friction: 0.5, restitution: 0.3 } );
+        //let physicsContactMaterial = new CANNON.ContactMaterial( physicsMaterial, physicsMaterial, { friction: 0.5, restitution: 0.3 } );
 
-        this.world.addContactMaterial( physicsContactMaterial );
+        //this.world.addContactMaterial( physicsContactMaterial );
 
         // Create a plane
         let groundShape = new CANNON.Plane();
@@ -447,33 +395,53 @@ class Scene3D {
         groundBody.quaternion.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), -Math.PI/2 );
         this.world.addBody( groundBody );
 
+        //----------------- Ball -----------------
+        this.ballShape = new CANNON.Sphere( 8 );
+        this.ballGeometry = new THREE.SphereGeometry( this.ballShape.radius, 32, 32 );
+        this.shootDirection = new THREE.Vector3();
+
+        this.ballBody = new CANNON.Body( { mass: 1.5, linearDamping: 0.1 } );
+        this.ballBody.addShape( this.ballShape );
+        this.shootVelo = this.shotControl.shootVelo;
+
+        this.material = new THREE.MeshLambertMaterial( { color: 0xff0000 } );
+        this.ballMesh = new THREE.Mesh( this.ballGeometry, this.material );
+        this.world.addBody( this.ballBody );
+        this.scene.add( this.ballMesh );
+
+        this.ballMesh.castShadow = true;
+        this.ballMesh.receiveShadow = true;
+        this.balls.push( this.ballBody );
+        this.ballMeshes.push( this.ballMesh );
+
 		//------------ Ring -------------
-		let ringGeom = new THREE.RingGeometry( 3, 7, 32 );
+		let ringGeom = new THREE.RingGeometry( 30, 70, 32 );
 		let ringMaterial = new THREE.MeshLambertMaterial( { color: 0xff0000, transparent: false, opacity: 1 } );
 
 		this.ring = new THREE.Mesh( ringGeom, ringMaterial );
 		this.ring.name = 'ring';
-		this.ring.position.set( 0, 1.1, 0 );
+		this.ring.position.set( 0, 1.2, 0 );
 		this.ring.rotation.x = -0.5 * Math.PI;
 
 		this.scene.add( this.ring );
 
 		//------------ GOAL ----------------
-    	let postLeft = new THREE.Mesh( new THREE.CylinderGeometry( 0.7, 0.7, 25.6, 32 ),
+    	let postLeft = new THREE.Mesh( new THREE.CylinderGeometry( 4, 4, 170, 32 ),
 							    	new THREE.MeshLambertMaterial( { color: 0xffffff } ) );
 
-    	postLeft.position.set( 37.2, 12.8, 48 );
+    	postLeft.position.set( -2950, 60, 240 );
     	this.scene.add( postLeft );
     
     	let postRight = postLeft.clone();
-    	postRight.position.set( -37.2, 12.8, 48 );
+    	postRight.position.set( -2950, 60, -210 );
     	this.scene.add( postRight );
     
-    	let crossbar = new THREE.Mesh( new THREE.CylinderGeometry( 0.7, 0.7, 75, 32 ),
+    	let crossbar = new THREE.Mesh( new THREE.CylinderGeometry( 4, 4, 450, 32 ),
 							    	new THREE.MeshLambertMaterial( { color: 0xffffff } ) );
 
     	crossbar.rotation.z = Math.PI / 2;
-    	crossbar.position.set( 0, 25, 48 );
+    	crossbar.rotation.y = Math.PI / 2;
+    	crossbar.position.set( -2950, 140, 20 );
     	this.scene.add( crossbar );
 
 
@@ -503,7 +471,8 @@ class Scene3D {
 			new THREE.BoxGeometry( gridWidth*100, 1, gridHeight*100 ),
 			new THREE.MeshLambertMaterial( { color:"green" } )
 		);
-		this.ground.material.visible = false;
+		this.ground.material.visible = true;
+		this.ground.receiveShadow = true;
 
 		this.ground.position.y = -0.5;  // top of base lies in the plane y = -5;
 		this.worldContainer.add( this.ground );
@@ -512,21 +481,17 @@ class Scene3D {
 		//targetForDragging.material.opacity = 0.1;
 		//world.add(targetForDragging);
 
-		this.cylinder = new THREE.Mesh(
-			new THREE.CylinderGeometry( 1, 2, 6, 16, 32 ),
-			new THREE.MeshLambertMaterial( { color:"yellow" } )
-		);
-		this.cylinder.position.y = 3;  // places base at y = 3;
-
-		this.addCylinder( 10, 10 );
-		this.addCylinder( 0, 15 );
-		this.addCylinder( -15, -7 );
-		this.addCylinder( -8, 5 );
-		this.addCylinder( 5, -12 );
+/*
+		this.addCylinder( 100, 100 );
+		this.addCylinder( 0, 150 );
+		this.addCylinder( -150, -70 );
+		this.addCylinder( -80, 50 );
+		this.addCylinder( 50, -120 );
+*/
 
  		// --------- Soccer Ball ----------		
      	let buffgeoSphere = new THREE.BufferGeometry();
-        buffgeoSphere.fromGeometry( new THREE.SphereGeometry( 1, 20, 10 ) );
+        buffgeoSphere.fromGeometry( new THREE.SphereGeometry( 10, 20, 10 ) );
 	    let ballTexture = new THREE.TextureLoader().load( 'models/ball/ball.png' );			        
         var ballMaterial = new THREE.MeshLambertMaterial({ 
             color: 0xffffff, 
@@ -546,8 +511,13 @@ class Scene3D {
 
 	addCylinder( x, z ) {
 
+		this.cylinder = new THREE.Mesh(
+			new THREE.CylinderGeometry( 10, 20, 60, 16, 32 ),
+			new THREE.MeshLambertMaterial( { color:"yellow" } )
+		);
+
 		let cylinderMesh = this.cylinder.clone();
-		cylinderMesh.position.set( x, 3, z );
+		cylinderMesh.position.set( x, 30, z );
 
 		this.worldContainer.add( cylinderMesh );
 
@@ -555,7 +525,7 @@ class Scene3D {
     	// We need to rotate it before attaching it to the mesh.
     	// CylinderGeometry( radiusTop, radiusBottom, height, radialSegments, heightSegments, openEnded , thetaStart, thetaLength );
 
-    	let cylinderShape = new CANNON.Cylinder( 1, 2, 6, 16 );
+    	let cylinderShape = new CANNON.Cylinder( 10, 20, 60, 16 );
 
     	let quaternion = new CANNON.Quaternion();
     	quaternion.setFromAxisAngle( new CANNON.Vec3( 1, 0, 0 ), -Math.PI / 2 );
@@ -568,7 +538,7 @@ class Scene3D {
 		let cylinderBody = new CANNON.Body( mass );
 		cylinderBody.addShape( cylinderShape );
 
-		cylinderBody.position.set( x, 3, z );
+		cylinderBody.position.set( x, 30, z );
 		this.world.add( cylinderBody );
 
         this.boxes.push( cylinderBody );
@@ -686,10 +656,10 @@ class Scene3D {
 		//a = Math.min( 45, Math.max( -45, coords.x ) );
 		//b = Math.min( 45, Math.max( -45, coords.z ) );
 	
-		this.dragItem.position.set( coords.x, 1, coords.z );
+		this.dragItem.position.set( coords.x, 30, coords.z );
 		
 		if ( this.dragItemBody ){
-			this.dragItemBody.position.set( coords.x, 1, coords.z );
+			this.dragItemBody.position.set( coords.x, 30, coords.z );
 		};
 
 	};
@@ -835,3 +805,94 @@ let scene3D;
 document.addEventListener( "DOMContentLoaded", function( event ) {
 	scene3D = new Scene3D();
 });
+
+
+
+/*
+
+  throwBall(progress) {
+
+    this.ballMaterial = new THREE.MeshPhongMaterial({
+      color: 0x111111,
+      specular: 0x444444,
+      shininess: 15
+    })
+
+    this.cannonMaterials = {
+    	ball: new CANNON.Material() 
+    };
+
+    const radius = utils.clamp( 0.1, 8, progress * 8 );
+
+    const ball = new Ball( {
+      radius,
+      position: new CANNON.Vec3( this.camera.position.x, this.camera.position.y, this.camera.position.z ),
+      meshMaterial: this.ballMaterial,
+      cannonMaterial: this.cannonMaterials.ball
+    
+    })
+
+    const forceFactor = utils.clamp( 100, 600, 100 + progress * 400 );
+    
+    const force = this.raycastPoint.sub( this.camera.position ).multiplyScalar( forceFactor );
+    
+    ball.body.applyLocalForce( force, this.camera.position );
+    
+    this.add( ball.mesh )
+    
+    this.world.addBody( ball.body );
+
+    this.balls.push( ball )
+  
+  }
+
+
+
+
+function fire() {
+
+	var distance = 1;
+	var projectileSpeed = 40;
+
+	var projectileShape = new CANNON.Sphere( 0.2 );
+	var projectileBody = new CANNON.Body( { mass: 1 } );
+	projectileBody.addShape( projectileShape );
+	var projectileMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff } );
+	var projectileMesh = new THREE.Mesh( new THREE.SphereGeometry( projectileShape.radius ), projectileMaterial );
+
+	world.addBody( projectileBody );
+	projectileBodies.push( projectileBody );
+	scene.add( projectileMesh );
+	projectileMeshes.push( projectileMesh );
+
+
+	body = new CANNON.Body({ mass: 1 });
+	body.addShape(shape);
+	body.position.set(0,2,0);
+	world.addBody(body);
+
+	var firingDirection = new CANNON.Vec3( 0, 0, -1 );
+	var firingDirection = body.quaternion.vmult( firingDirection );
+
+	posX = body.position.x + distance * firingDirection.x;
+	posY = body.position.y + distance * firingDirection.y;
+	posZ = body.position.z + distance * firingDirection.z;
+
+	projectileBody.position.set( posX, posY, posZ );
+	projectileMesh.position.set( posX, posY, posZ );
+
+	projectileBody.velocity.set( firingDirection.x*projectileSpeed, firingDirection.y*projectileSpeed, firingDirection.z*projectileSpeed );
+
+};
+
+
+*/
+
+
+
+
+
+
+
+
+
