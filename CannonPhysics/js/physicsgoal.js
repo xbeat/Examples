@@ -489,6 +489,18 @@ class Scene3D {
 		this.addCylinder( 50, -120 );
 */
 
+	var ballSize = 40;
+   
+    var x = new THREE.MeshLambertMaterial( { color: "red", visible: true } );
+
+
+    //intersection plane
+    var o = new THREE.PlaneGeometry( ballSize * 2, ballSize * 2 );
+    let intersectionPlane = new THREE.Mesh( o, x );
+    intersectionPlane.visible = true;
+    this.scene.add( intersectionPlane );
+
+
  		// --------- Soccer Ball ----------		
      	let buffgeoSphere = new THREE.BufferGeometry();
         buffgeoSphere.fromGeometry( new THREE.SphereGeometry( 10, 20, 10 ) );
@@ -805,94 +817,4 @@ let scene3D;
 document.addEventListener( "DOMContentLoaded", function( event ) {
 	scene3D = new Scene3D();
 });
-
-
-
-/*
-
-  throwBall(progress) {
-
-    this.ballMaterial = new THREE.MeshPhongMaterial({
-      color: 0x111111,
-      specular: 0x444444,
-      shininess: 15
-    })
-
-    this.cannonMaterials = {
-    	ball: new CANNON.Material() 
-    };
-
-    const radius = utils.clamp( 0.1, 8, progress * 8 );
-
-    const ball = new Ball( {
-      radius,
-      position: new CANNON.Vec3( this.camera.position.x, this.camera.position.y, this.camera.position.z ),
-      meshMaterial: this.ballMaterial,
-      cannonMaterial: this.cannonMaterials.ball
-    
-    })
-
-    const forceFactor = utils.clamp( 100, 600, 100 + progress * 400 );
-    
-    const force = this.raycastPoint.sub( this.camera.position ).multiplyScalar( forceFactor );
-    
-    ball.body.applyLocalForce( force, this.camera.position );
-    
-    this.add( ball.mesh )
-    
-    this.world.addBody( ball.body );
-
-    this.balls.push( ball )
-  
-  }
-
-
-
-
-function fire() {
-
-	var distance = 1;
-	var projectileSpeed = 40;
-
-	var projectileShape = new CANNON.Sphere( 0.2 );
-	var projectileBody = new CANNON.Body( { mass: 1 } );
-	projectileBody.addShape( projectileShape );
-	var projectileMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff } );
-	var projectileMesh = new THREE.Mesh( new THREE.SphereGeometry( projectileShape.radius ), projectileMaterial );
-
-	world.addBody( projectileBody );
-	projectileBodies.push( projectileBody );
-	scene.add( projectileMesh );
-	projectileMeshes.push( projectileMesh );
-
-
-	body = new CANNON.Body({ mass: 1 });
-	body.addShape(shape);
-	body.position.set(0,2,0);
-	world.addBody(body);
-
-	var firingDirection = new CANNON.Vec3( 0, 0, -1 );
-	var firingDirection = body.quaternion.vmult( firingDirection );
-
-	posX = body.position.x + distance * firingDirection.x;
-	posY = body.position.y + distance * firingDirection.y;
-	posZ = body.position.z + distance * firingDirection.z;
-
-	projectileBody.position.set( posX, posY, posZ );
-	projectileMesh.position.set( posX, posY, posZ );
-
-	projectileBody.velocity.set( firingDirection.x*projectileSpeed, firingDirection.y*projectileSpeed, firingDirection.z*projectileSpeed );
-
-};
-
-
-*/
-
-
-
-
-
-
-
-
 
