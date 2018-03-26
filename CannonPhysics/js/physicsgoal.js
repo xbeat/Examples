@@ -100,7 +100,7 @@ class Scene3D {
         this.world.broadphase = new CANNON.NaiveBroadphase();
 
 		//----- CANNON debug -----
-		//this.cannonDebugRenderer = new THREE.CannonDebugRenderer( this.scene, this.world );
+		this.cannonDebugRenderer = new THREE.CannonDebugRenderer( this.scene, this.world );
 
 		// Dat Gui 
 		this.shotControl = {
@@ -330,7 +330,7 @@ class Scene3D {
 		var firingDirection = new CANNON.Vec3( -1, 0, 1 );
 		var firingDirection = this.ballBody.quaternion.vmult( firingDirection );
 		
-		this.ballBody.velocity.set( firingDirection.x*projectileSpeed, -10, firingDirection.z*projectileSpeed );
+		this.ballBody.velocity.set( firingDirection.x * projectileSpeed, -10, firingDirection.z * projectileSpeed );
 
 
 	};
@@ -367,7 +367,7 @@ class Scene3D {
             this.ballMeshes[i].quaternion.copy( this.balls[i].quaternion );
         };
 
-	    //this.cannonDebugRenderer.update();// Update the debug renderer
+	    this.cannonDebugRenderer.update();// Update the debug renderer
 
 	};
 
@@ -481,25 +481,11 @@ class Scene3D {
 		//targetForDragging.material.opacity = 0.1;
 		//world.add(targetForDragging);
 
-/*
 		this.addCylinder( 100, 100 );
 		this.addCylinder( 0, 150 );
 		this.addCylinder( -150, -70 );
 		this.addCylinder( -80, 50 );
 		this.addCylinder( 50, -120 );
-*/
-
-	var ballSize = 40;
-   
-    var x = new THREE.MeshLambertMaterial( { color: "red", visible: true } );
-
-
-    //intersection plane
-    var o = new THREE.PlaneGeometry( ballSize * 2, ballSize * 2 );
-    let intersectionPlane = new THREE.Mesh( o, x );
-    intersectionPlane.visible = true;
-    this.scene.add( intersectionPlane );
-
 
  		// --------- Soccer Ball ----------		
      	let buffgeoSphere = new THREE.BufferGeometry();

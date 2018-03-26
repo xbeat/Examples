@@ -6,16 +6,20 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
         <link rel="stylesheet" type="text/css" href="css/game.css" />
+	    <script type="text/javascript" src="js/dat.gui.min.js"></script>
+	    <script type="text/javascript" src="js/cannon.js"></script>
+	    <script type="text/javascript" src="js/three.js"></script>
+	    <script type="text/javascript" src="js/OrbitControls.js"></script>
+	    <script type="text/javascript" src="js/CannonDebugRenderer.js"></script>
     </head>
 
     <body>
-    <div id="gameWrap">
-    </div>
-
-    <script type="text/javascript" src="js/cannon.js"></script>
-    <script type="text/javascript" src="js/three.js"></script>
-    <script type="text/javascript" src="js/OrbitControls.js"></script>
-    <script type="text/javascript" src="js/game.js"></script>
-    <script type="text/javascript" src="js/CannonDebugRenderer.js"></script>
+	    <div id="gameWrap"></div>
+		<div id="container"></div>
+	    <div class="virtualButton" id="buttonShoot">Shoot</div>
+	    <div class="virtualButton" id="buttonReset">Reset</div>    
     </body>
+
+    <script type="text/javascript" src="js/game.js"></script>
+
 </html>
